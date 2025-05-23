@@ -29,6 +29,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
     like_count = serializers.IntegerField(read_only=True)
     thread_count = serializers.IntegerField(read_only=True)
     threads = ThreadSimpleSerializer(source='thread_set', many=True, read_only=True)
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -49,4 +50,11 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'like_count',
             'thread_count',
             'threads',
+            'is_liked',
         ]
+    
+    def get_is_liked(self, obj):
+        user = self.context.get('request').user
+        if user.is_authenticated:
+            return obj.liked_users.filter(id=user.id).exists()
+        return False

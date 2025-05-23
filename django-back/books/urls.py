@@ -10,6 +10,9 @@ urlpatterns = [
     # 도서 상세 조회
     path('<int:pk>/', views.book_detail, name='book_detail'),
     
+    # 도서 좋아요/좋아요 취소
+    path('<int:pk>/like/', views.book_like, name='book_like'),
+    
     # 카테고리 목록 조회
     path('categories/', views.category_list, name='category_list'),
 ]
