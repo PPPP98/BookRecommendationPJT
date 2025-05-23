@@ -133,6 +133,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
   name: 'BookDetail',
   props: {
@@ -161,125 +162,86 @@ export default {
       this.loading = true;
       this.error = null;
       try {
-        // 백엔드 API 구현 전 목업 데이터 사용
-        // 실제로는 fetch 또는 axios로 API 호출
-        setTimeout(() => {
-          // 목업 데이터
-          this.book = {
-            id: this.id,
-            title: '소설 제목',
-            author: '홍길동',
-            publisher: '출판사',
-            publicationDate: '2023-01-01',
-            isbn: '9788901234567',
-            coverImage: 'https://via.placeholder.com/300x450',
-            description: '이 소설은 현대 사회의 다양한 이슈를 다루고 있습니다. 작가의 섬세한 묘사와 깊이 있는 캐릭터 설정으로 독자들에게 깊은 인상을 남깁니다. 이 책을 통해 우리는 삶의 의미와 인간 관계의 중요성에 대해 다시 한번 생각해볼 수 있습니다.',
-            isLiked: false,
-            reviewCount: 2,
-            reviews: [
-              {
-                id: 1,
-                userName: '김독자',
-                date: '2023-05-15',
-                rating: 4,
-                content: '흥미로운 내용과 캐릭터 설정이 좋았습니다. 다만 일부 장면에서는 전개가 조금 느린 감이 있어 아쉬웠습니다.'
-              },
-              {
-                id: 2,
-                userName: '이리뷰',
-                date: '2023-06-20',
-                rating: 5,
-                content: '최근에 읽은 책 중 가장 인상적이었습니다. 작가의 문체와 이야기 전개 방식이 매우 독특하고 신선했습니다.'
-              }
-            ]
-          };
-          
-          // 유사 도서 목업 데이터
-          this.similarBooks = [
-            {
-              id: 101,
-              title: '유사 도서 1',
-              author: '작가 A',
-              coverImage: 'https://via.placeholder.com/150x200'
-            },
-            {
-              id: 102,
-              title: '유사 도서 2',
-              author: '작가 B',
-              coverImage: 'https://via.placeholder.com/150x200'
-            },
-            {
-              id: 103,
-              title: '유사 도서 3',
-              author: '작가 C',
-              coverImage: 'https://via.placeholder.com/150x200'
-            }
-          ];
-          
-          this.loading = false;
-        }, 500);
+        // 도서 상세 정보 가져오기
+        const response = await axios.get(`/api/books/${this.id}/`);
+        console.log('도서 상세 정보 응답:', response.data);
+        
+        // 서버 응답에 없는 필드들을 기본값으로 초기화
+        this.book = {
+          ...response.data,
+          coverImage: response.data.cover, // cover 필드를 coverImage로 매핑
+          reviews: [], // 리뷰 기능 구현 전까지는 빈 배열로 초기화
+          reviewCount: 0,
+          isLiked: false,
+          likes_count: 0
+        };
+        
+        // 임시: 유사 도서 기능이 구현되기 전까지는 빈 배열로 설정
+        this.similarBooks = [];
+        
       } catch (err) {
-        this.error = '도서 정보를 불러오는데 실패했습니다.';
-        this.loading = false;
-        console.error('Error fetching book details:', err);
+        console.error('API 에러 상세:', {
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status,
+          config: err.config
+        });
+        this.error = `도서 정보를 불러오는데 실패했습니다. (${err.message})`;
       }
+      this.loading = false;
     },
-    toggleLike() {
-      // 백엔드 API 구현 전 클라이언트 상태만 변경
-      if (this.book) {
-        this.book.isLiked = !this.book.isLiked;
-        // 실제로는 API 호출하여 서버에 상태 저장
-      }
-    },
-    checkAvailability() {
-      // 도서관별 대출 가능 여부 확인
-      this.showAvailability = true;
+    
+    async toggleLike() {
+      if (!this.book) return;
       
-      // 목업 데이터
-      this.libraries = [
-        {
-          id: 1,
-          name: '중앙 도서관',
-          address: '서울시 강남구',
-          available: true
-        },
-        {
-          id: 2,
-          name: '디지털 도서관',
-          address: '서울시 서초구',
-          available: false,
-          returnDate: '2023-06-30'
-        },
-        {
-          id: 3,
-          name: '구립 도서관',
-          address: '서울시 송파구',
-          available: true
-        }
-      ];
+      try {
+        await axios.post(`/api/books/${this.id}/like/`);
+        this.book.isLiked = !this.book.isLiked;
+        this.book.likes_count = this.book.isLiked ? 
+          this.book.likes_count + 1 : 
+          this.book.likes_count - 1;
+      } catch (err) {
+        console.error('Error toggling like:', err);
+      }
     },
-    submitReview() {
+    
+    async checkAvailability() {
+      this.showAvailability = true;
+      try {
+        const response = await axios.get(`/api/libraries/availability/${this.id}/`);
+        this.libraries = response.data;
+      } catch (err) {
+        console.error('Error checking availability:', err);
+      }
+    },
+    
+    async submitReview() {
       if (!this.newReview.trim() || this.rating === 0) {
         alert('리뷰 내용과 평점을 모두 입력해주세요.');
         return;
       }
-      
-      // 새 리뷰 추가 (목업)
-      const newReviewObj = {
-        id: this.book.reviews.length + 1,
-        userName: '사용자', // 실제로는 로그인된 사용자 이름
-        date: new Date().toISOString().split('T')[0],
-        rating: this.rating,
-        content: this.newReview
-      };
-      
-      this.book.reviews.push(newReviewObj);
-      this.book.reviewCount += 1;
-      this.newReview = '';
-      this.rating = 0;
-      
-      // 실제로는 API 호출하여 리뷰 저장
+
+      try {
+        await axios.post(`/api/books/${this.id}/reviews/`, {
+          content: this.newReview,
+          rating: this.rating
+        });
+        
+        // 리뷰 목록 새로고침
+        const reviewsResponse = await axios.get(`/api/books/${this.id}/reviews/`);
+        this.book.reviews = reviewsResponse.data;
+        this.book.reviewCount = this.book.reviews.length;
+        
+        // 입력 폼 초기화
+        this.newReview = '';
+        this.rating = 0;
+        
+      } catch (err) {
+        console.error('Error submitting review:', err);
+        alert('리뷰 작성에 실패했습니다. 다시 시도해주세요.');
+      }
     },
+    
     navigateToBook(bookId) {
       this.$router.push({ name: 'BookDetail', params: { id: bookId } });
     }

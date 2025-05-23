@@ -15,8 +15,7 @@
 -->
 <template>
   <div class="book-card" @click="$emit('click')">    <!-- 도서 커버 이미지 -->
-    <div class="book-cover">
-      <img 
+    <div class="book-cover">      <img 
         :src="book.cover_image || book.cover"
         :alt="book.title"
         class="cover-image"
@@ -30,13 +29,13 @@
       
       <!-- 메타데이터: 카테고리, 좋아요 수, 댓글 수 -->
       <div class="metadata">
-        <span class="category">{{ book.category }}</span>
+        <span class="category">{{ book.category_name || book.category }}</span>
         <div class="stats">
           <span class="likes">
-            <i class="fas fa-heart"></i> {{ book.likes_count }}
+            <i class="fas fa-heart"></i> {{ book.likes_count || 0 }}
           </span>
           <span class="threads">
-            <i class="fas fa-comments"></i> {{ book.threads_count }}
+            <i class="fas fa-comments"></i> {{ book.threads_count || 0 }}
           </span>
         </div>
       </div>
@@ -51,17 +50,18 @@ export default {
     book: {
       type: Object,
       required: true,
-      validator(value) {
-        // 필수 필드 검증
-        return [
-          'id',
-          'title',
-          'author',
-          'cover',
-          'category',
-          'likes_count',
-          'threads_count'
-        ].every(prop => prop in value)
+    validator(value) {
+        // 필수 필드 검증 - API 응답 구조에 맞게 수정
+        const requiredFields = ['id', 'title', 'author'];
+        const hasRequiredFields = requiredFields.every(prop => prop in value);
+        
+        // cover 또는 cover_image가 있는지 확인
+        const hasCover = 'cover' in value || 'cover_image' in value;
+        
+        // category 또는 category_name이 있는지 확인
+        const hasCategory = 'category' in value || 'category_name' in value;
+        
+        return hasRequiredFields && hasCover && hasCategory;
       }
     }
   }
