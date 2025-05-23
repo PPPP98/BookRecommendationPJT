@@ -16,48 +16,47 @@
     <Navbar />
     
     <main class="main-content">
-      <SearchBar 
-        @search="handleSearch"
-        @filter="handleFilter"
-      />
+      <div class="hero-section">
+        <h1 class="hero-title">AI와 함께하는<br>새로운 도서 탐색</h1>
+      </div>
 
-      <CategoryButtons 
-        :categories="categories"
-        @category-selected="handleCategorySelect"
-      />
+      <div class="banner-section">
+        <div class="banner-content">
+          <!-- 메인 배너 내용 -->
+        </div>
+      </div>
 
-      <BookSection
-        title="추천 도서"
-        :books="recommendedBooks"
-        type="recommended"
-        @book-selected="navigateToBook"
-      />
-
-      <BookSection
-        title="베스트셀러"
-        :books="bestsellerBooks"
-        type="bestseller"
-        @book-selected="navigateToBook"
-      />
-
-      <BookSection
-        title="신작 도서"
-        :books="newBooks"
-        type="new"
-        @book-selected="navigateToBook"
-      />
-
-      <div class="thread-sections">
-        <ThreadSection
-          title="인기 쓰레드"
-          :threads="popularThreads"
-          type="popular"
-        />
-        <ThreadSection
-          title="팔로우 쓰레드"
-          :threads="followingThreads"
-          type="following"
-        />
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon square"></div>
+          <h3>AI 추천도서</h3>
+          <p>개인 맞춤형 도서 추천을 제공합니다</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon circle"></div>
+          <h3>베스트셀러 Top10</h3>
+          <p>가장 인기있는 도서를 확인하세요</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon triangle"></div>
+          <h3>도서 큐레이션</h3>
+          <p>관심사별 엄선된 도서 컬렉션</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon square"></div>
+          <h3>독서 커뮤니티</h3>
+          <p>다른 독자들과 의견을 나누세요</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon circle"></div>
+          <h3>근처 도서관</h3>
+          <p>가까운 도서관을 찾아보세요</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon triangle"></div>
+          <h3>도서 리뷰</h3>
+          <p>상세한 도서 리뷰를 확인하세요</p>
+        </div>
       </div>
     </main>
 
@@ -66,75 +65,14 @@
 </template>
 
 <script>
-import { books } from '@/mocks/books'
 import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
-import SearchBar from '@/components/common/SearchBar.vue'
-import BookSection from '@/components/books/BookSection.vue'
-import ThreadSection from '@/components/thread/ThreadSection.vue'
-import CategoryButtons from '@/components/common/CategoryButtons.vue'
 
 export default {
   name: 'MainPage',
   components: {
     Navbar,
     Footer,
-    SearchBar,
-    BookSection,
-    ThreadSection,
-    CategoryButtons
-  },
-  data() {
-    return {
-      categories: [
-        { id: 1, name: '소설' },
-        { id: 2, name: '에세이' },
-        { id: 3, name: '경제/경영' },
-        { id: 4, name: '자기계발' }
-      ],
-      // Mock 데이터로 초기화
-      recommendedBooks: books,
-      bestsellerBooks: books,
-      newBooks: books,
-      popularThreads: [
-        {
-          id: 1,
-          title: '이번 달 추천 도서 목록',
-          content: '여러분의 추천 도서를 공유해주세요',
-          author: '사용자1',
-          likes: 15,
-          comments: 5
-        }
-      ],
-      followingThreads: [
-        {
-          id: 2,
-          title: '독서 모임 참여자 모집',
-          content: '매주 토요일 독서 모임에 참여하실 분을 찾습니다',
-          author: '사용자2',
-          likes: 10,
-          comments: 3
-        }
-      ]
-    }
-  },
-  methods: {
-    handleSearch(query) {
-      console.log('Search query:', query)
-      // TODO: API 연동 시 검색 기능 구현
-    },
-    handleFilter(category) {
-      console.log('Filter category:', category)
-      // TODO: API 연동 시 필터링 기능 구현
-    },
-    handleCategorySelect(category) {
-      console.log('Selected category:', category)
-      // TODO: API 연동 시 카테고리 이동 구현
-    },
-    navigateToBook(bookId) {
-      // TODO: 도서 상세 페이지로 이동
-      this.$router.push(`/books/${bookId}`)
-    }
   }
 }
 </script>
@@ -144,6 +82,7 @@ export default {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: #f8f9fa;
 }
 
 .main-content {
@@ -153,15 +92,85 @@ export default {
   padding: 2rem;
 }
 
-.thread-sections {
+.hero-section {
+  text-align: left;
+  padding: 2rem 0;
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.3;
+}
+
+.banner-section {
+  background-color: #f1f3f5;
+  border-radius: 12px;
+  height: 300px;
+  margin: 2rem 0;
+}
+
+.features-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
-  margin-top: 2rem;
+  margin-top: 3rem;
+}
+
+.feature-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 1.5rem;
+}
+
+.feature-icon.square {
+  background-color: #e9ecef;
+}
+
+.feature-icon.circle {
+  background-color: #e9ecef;
+  border-radius: 50%;
+}
+
+.feature-icon.triangle {
+  background-color: #e9ecef;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.feature-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.feature-card p {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 @media (max-width: 768px) {
-  .thread-sections {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .features-grid {
     grid-template-columns: 1fr;
   }
 }

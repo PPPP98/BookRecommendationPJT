@@ -7,46 +7,39 @@
         id: Number,
         title: String,
         author: String,
-        cover_image: String,
-        rating: Number,
-        description: String,
+        cover: String,
         category: String,
-        reviews: Array
+        likes_count: Number,
+        threads_count: Number
       }
 -->
 <template>
-  <div class="book-card" @click="$emit('click', book.id)">
-    <!-- 도서 커버 이미지 -->
+  <div class="book-card" @click="$emit('click')">    <!-- 도서 커버 이미지 -->
     <div class="book-cover">
       <img 
-        :src="book.cover_image" 
+        :src="book.cover_image || book.cover"
         :alt="book.title"
         class="cover-image"
       >
     </div>
-
+    
     <!-- 도서 정보 -->
     <div class="book-info">
       <h3 class="title">{{ book.title }}</h3>
       <p class="author">{{ book.author }}</p>
       
-      <!-- 평점 정보 -->
-      <div class="rating-info">
-        <span class="rating">⭐ {{ book.rating }}</span>
-        <span class="review-count" v-if="book.reviews">
-          ({{ book.reviews.length }}개의 리뷰)
-        </span>
+      <!-- 메타데이터: 카테고리, 좋아요 수, 댓글 수 -->
+      <div class="metadata">
+        <span class="category">{{ book.category }}</span>
+        <div class="stats">
+          <span class="likes">
+            <i class="fas fa-heart"></i> {{ book.likes_count }}
+          </span>
+          <span class="threads">
+            <i class="fas fa-comments"></i> {{ book.threads_count }}
+          </span>
+        </div>
       </div>
-
-      <!-- 카테고리 표시 -->
-      <span v-if="book.category" class="category">
-        {{ book.category }}
-      </span>
-    </div>
-
-    <!-- 슬롯: 추가 액션 버튼 등 -->
-    <div class="actions">
-      <slot name="actions"></slot>
     </div>
   </div>
 </template>
@@ -60,10 +53,15 @@ export default {
       required: true,
       validator(value) {
         // 필수 필드 검증
-        return value.id && 
-               value.title && 
-               value.author && 
-               value.cover_image !== undefined
+        return [
+          'id',
+          'title',
+          'author',
+          'cover',
+          'category',
+          'likes_count',
+          'threads_count'
+        ].every(prop => prop in value)
       }
     }
   }
@@ -72,55 +70,70 @@ export default {
 
 <style scoped>
 .book-card {
-  border: 1px solid #ddd;
+  background: white;
   border-radius: 8px;
-  padding: 1rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
   cursor: pointer;
+}
+
+.book-card:hover {
+  transform: translateY(-5px);
+}
+
+.book-cover {
+  aspect-ratio: 3/4;
+  overflow: hidden;
 }
 
 .cover-image {
   width: 100%;
-  height: auto;
-  max-height: 200px;
+  height: 100%;
   object-fit: cover;
-  border-radius: 4px;
 }
 
 .book-info {
-  margin-top: 1rem;
+  padding: 1rem;
 }
 
 .title {
-  font-size: 1.1rem;
-  margin: 0.5rem 0;
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+  font-weight: 600;
 }
 
 .author {
-  color: #666;
   font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
 }
 
-.rating-info {
+.metadata {
   display: flex;
-  gap: 0.5rem;
+  justify-content: space-between;
   align-items: center;
-  margin: 0.5rem 0;
-}
-
-.review-count {
-  color: #666;
-  font-size: 0.9rem;
 }
 
 .category {
-  display: inline-block;
+  background: #f8f9fa;
   padding: 0.2rem 0.5rem;
-  background: #f0f0f0;
   border-radius: 4px;
   font-size: 0.8rem;
 }
 
-.actions {
-  margin-top: 1rem;
+.stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.stats i {
+  margin-right: 0.3rem;
+}
+
+.likes {
+  color: #dc3545;
 }
 </style>

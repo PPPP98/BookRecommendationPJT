@@ -1,8 +1,10 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
+import axios from 'axios'
 
-// 글로벌 CSS 또는 스타일 파일 추가 가능
+// axios 기본 설정
+axios.defaults.baseURL = 'http://localhost:8000'
 
 const app = createApp(App)
 
