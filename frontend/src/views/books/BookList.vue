@@ -21,25 +21,34 @@
   <div class="book-list-page">
     <Navbar />
     
-    <main class="main-content">
-      <div class="profile-section">
-        <img src="@/assets/profile.png" alt="Profile" class="profile-image">
+    <main class="main-content">      <div class="profile-section">
+        <div class="profile-image"></div>
         <div class="profile-info">
           <h2>park heejae</h2>
           <p>당신이 좋아할 만한 도서를 AI가 추천해드릴 것입니다.</p>
         </div>
-      </div>
-
-      <!-- 필터 및 정렬 섹션 -->
+      </div>      <!-- 필터 및 정렬 섹션 -->
       <div class="filter-section">
-        <select v-model="selectedCategory" class="filter-select" :disabled="loading">
-          <option value="">전체 카테고리</option>
-          <option v-for="category in categories" 
-                  :key="category.id" 
-                  :value="category.id">
+        <div class="category-buttons">
+          <button 
+            class="category-button" 
+            :class="{ active: selectedCategory === '' }"
+            @click="selectedCategory = ''"
+            :disabled="loading"
+          >
+            전체
+          </button>
+          <button 
+            v-for="category in categories" 
+            :key="category.id"
+            class="category-button"
+            :class="{ active: selectedCategory === category.id }"
+            @click="selectedCategory = category.id"
+            :disabled="loading"
+          >
             {{ category.name }}
-          </option>
-        </select>
+          </button>
+        </div>
 
         <select v-model="sortBy" class="filter-select" :disabled="loading">
           <option value="pub_date">최신순</option>
@@ -121,22 +130,29 @@ export default {
     const selectedCategory = ref('')
     const sortBy = ref('pub_date')
 
-    const totalPages = computed(() => Math.ceil(totalBooks.value / itemsPerPage.value))
-
-    // 도서 목록 조회
+    const totalPages = computed(() => Math.ceil(totalBooks.value / itemsPerPage.value))    // 도서 목록 조회
     const fetchBooks = async () => {
       loading.value = true
       error.value = null
       
       try {
-        const response = await axios.get('/api/books/', {
-          params: {
-            page: currentPage.value,
-            page_size: itemsPerPage.value,
-            category: selectedCategory.value,
-            ordering: sortBy.value
+        const params = {
+          page: currentPage.value,
+          page_size: itemsPerPage.value,
+          ordering: sortBy.value
+        }
+          // 카테고리가 선택된 경우에만 category 파라미터 추가
+        if (selectedCategory.value !== '') {
+          // 선택된 카테고리 ID로 카테고리 객체 찾기
+          const selectedCategoryObj = categories.value.find(cat => cat.id === selectedCategory.value)
+          if (selectedCategoryObj) {
+            params.category = selectedCategoryObj.name  // 카테고리 이름으로 필터링
           }
-        })
+        }
+        
+        console.log('API 요청 파라미터:', params)
+        
+        const response = await axios.get('/api/books/', { params })
         
         books.value = response.data.results
         totalBooks.value = response.data.count
@@ -233,6 +249,7 @@ export default {
   height: 50px;
   border-radius: 50%;
   margin-right: 1rem;
+  background-color: #e9ecef;
 }
 
 .profile-info h2 {
@@ -247,15 +264,63 @@ export default {
 
 .filter-section {
   display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 1rem;
   margin-bottom: 2rem;
 }
 
-.filter-select {
-  padding: 0.5rem;
+.category-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.category-button {
+  padding: 0.5rem 1rem;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 20px;
   background: white;
+  color: #666;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.category-button:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #ccc;
+}
+
+.category-button.active {
+  background: #0066cc;
+  color: white;
+  border-color: #0066cc;
+}
+
+.category-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.filter-select {
+  padding: 0.3rem 0.8rem;
+  height: 32px;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  background: white;
+  font-size: 0.9rem;
+  color: #666;
+  cursor: pointer;
+  min-width: 100px;
+  max-width: 150px;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1em;
+  padding-right: 2rem;
 }
 
 .books-grid {
@@ -343,6 +408,12 @@ export default {
 
   .filter-section {
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-select {
+    max-width: none;
+    width: 100%;
   }
 }
 </style>
