@@ -3,7 +3,11 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 
 class User(AbstractUser):
-    profile_image = models.CharField(max_length=200, blank=True)
+    profile_image = models.ImageField(
+        upload_to='users/images/',  # 이미지 저장 경로
+        blank=True, 
+        null=True
+    )
     
     # ManyToMany relationships
     following = models.ManyToManyField(
