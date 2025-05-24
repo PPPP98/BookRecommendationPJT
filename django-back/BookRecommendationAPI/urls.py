@@ -27,4 +27,5 @@ urlpatterns = [
     # Custom accounts URLs
     path('api/accounts/', include('accounts.urls')),
     path('api/books/', include('books.urls')),
+    path('api/threads/', include('threads.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
