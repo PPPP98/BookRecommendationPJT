@@ -8,6 +8,17 @@ class User(AbstractUser):
         blank=True, 
         null=True
     )
+
+    nickname = models.CharField(
+        max_length=30, 
+        unique=True, 
+    )
+
+    bio = models.TextField(
+        blank=True, 
+        null=True, 
+        help_text='자기소개를 입력하세요.'
+    )
     
     # ManyToMany relationships
     following = models.ManyToManyField(
