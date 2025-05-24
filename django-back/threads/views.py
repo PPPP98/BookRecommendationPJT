@@ -44,3 +44,32 @@ def thread_detail(request, pk):
 
     serializer = ThreadDetailSerializer(thread, context={"request": request})
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["GET","PUT", "DELETE"])
+@permission_classes([IsAuthenticated])
+def thread_update_delete(request, pk):
+    """스레드 수정 및 삭제"""
+    try:
+        thread = Thread.objects.get(pk=pk, user=request.user)
+    except Thread.DoesNotExist:
+        return Response(
+            {"error": "스레드를 찾을 수 없거나 권한이 없습니다."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    if request.method == "PUT":
+        serializer = ThreadDetailSerializer(thread, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == "DELETE":
+        thread.delete()
+        return Response({'message':"성공적으로 삭제하였습니다"}, status=status.HTTP_204_NO_CONTENT)
+    
+    elif request.method == "GET":
+        serializer = ThreadDetailSerializer(thread, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
