@@ -30,6 +30,8 @@ class ThreadCreateSerializer(serializers.ModelSerializer):
 class ThreadDetailSerializer(serializers.ModelSerializer):
     user = UserSimpleSerializer(read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
+    is_liked = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Thread
@@ -42,4 +44,15 @@ class ThreadDetailSerializer(serializers.ModelSerializer):
             "updated_at",
             "user",
             "comments",
+            "is_liked",
+            "like_count",
         ]
+
+    def get_is_liked(self, obj):
+        user = self.context.get('request').user
+        if user.is_authenticated:
+            return user.like_threads.filter(id=obj.id).exists()
+        return False
+
+    def get_like_count(self, obj):
+        return obj.liked_users.count()
