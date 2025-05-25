@@ -1,33 +1,16 @@
-<!-- 
-  BookList 페이지
-  역할: 도서 목록을 표시하고 필터링, 검색, 정렬 기능을 제공
-  기능:
-    - 도서 목록 표시 (그리드 형태)
-    - 카테고리별 필터링
-    - 검색
-    - 정렬 (평점순, 최신순 등)
-    - 무한스크롤/페이지네이션
-  데이터 구조:
-    - books: Array<{
-        id: number,
-        title: string,
-        author: string,
-        cover_image: string,
-        rating: number,
-        category: string
-      }>
--->
 <template>
   <div class="book-list-page">
     <Navbar />
-    
-    <main class="main-content">      <div class="profile-section">
+    <main class="main-content">
+      <div class="profile-section">
         <div class="profile-image"></div>
         <div class="profile-info">
-          <h2>park heejae</h2>
+          <h2><사용자명 추가할것></h2>
           <p>당신이 좋아할 만한 도서를 AI가 추천해드릴 것입니다.</p>
         </div>
-      </div>      <!-- 필터 및 정렬 섹션 -->
+      </div>
+
+      <!-- 필터 및 정렬 섹션 -->
       <div class="filter-section">
         <div class="category-buttons">
           <button 
@@ -49,7 +32,6 @@
             {{ category.name }}
           </button>
         </div>
-
         <select v-model="sortBy" class="filter-select" :disabled="loading">
           <option value="pub_date">최신순</option>
           <option value="-like_count">좋아요순</option>
@@ -61,12 +43,10 @@
       <div v-if="loading" class="loading-spinner">
         <div class="spinner"></div>
       </div>
-
       <!-- 에러 메시지 -->
       <div v-else-if="error" class="error-message">
         {{ error }}
       </div>
-
       <!-- 도서 그리드 -->
       <div v-else class="books-grid">
         <BookCard
@@ -76,9 +56,8 @@
           @click="navigateToDetail(book.id)"
         />
       </div>
-
       <!-- 페이지네이션 -->
-      <div class="pagination" v-if="!loading && !error">
+      <div class="pagination" v-if="!loading && !error && totalPages > 1">
         <button 
           class="pagination-button" 
           :disabled="currentPage === 1"
@@ -98,14 +77,13 @@
         </button>
       </div>
     </main>
-
     <Footer />
   </div>
 </template>
 
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
@@ -120,6 +98,7 @@ export default {
   },
   setup() {
     const router = useRouter()
+    const route = useRoute()
     const books = ref([])
     const categories = ref([])
     const loading = ref(false)
@@ -129,31 +108,33 @@ export default {
     const itemsPerPage = ref(25)
     const selectedCategory = ref('')
     const sortBy = ref('pub_date')
+    // 검색창 제거, 대신 쿼리스트링 q만 사용
+    const searchQuery = ref(route.query.q || '')
 
-    const totalPages = computed(() => Math.ceil(totalBooks.value / itemsPerPage.value))    // 도서 목록 조회
+    const totalPages = computed(() => Math.ceil(totalBooks.value / itemsPerPage.value))
+
+    // 도서 목록 조회
     const fetchBooks = async () => {
       loading.value = true
       error.value = null
-      
       try {
         const params = {
           page: currentPage.value,
           page_size: itemsPerPage.value,
           ordering: sortBy.value
         }
-          // 카테고리가 선택된 경우에만 category 파라미터 추가
+        // 카테고리 필터
         if (selectedCategory.value !== '') {
-          // 선택된 카테고리 ID로 카테고리 객체 찾기
           const selectedCategoryObj = categories.value.find(cat => cat.id === selectedCategory.value)
           if (selectedCategoryObj) {
-            params.category = selectedCategoryObj.name  // 카테고리 이름으로 필터링
+            params.category = selectedCategoryObj.name
           }
         }
-        
-        console.log('API 요청 파라미터:', params)
-        
-        const response = await axios.get('/api/books/', { params })
-        
+        // 검색어 연동 (Navbar에서 /books?q=검색어로 이동 시)
+        if (searchQuery.value && searchQuery.value.trim()) {
+          params.q = searchQuery.value.trim()
+        }
+        const response = await axios.get('/api/books/search/', { params })
         books.value = response.data.results
         totalBooks.value = response.data.count
       } catch (err) {
@@ -191,7 +172,7 @@ export default {
       router.push(`/books/${bookId}`)
     }
 
-    // 필터 변경시 첫 페이지로 이동 후 도서 목록 새로고침
+    // 필터/정렬 변경시 첫 페이지로 이동 후 도서 목록 새로고침
     watch([selectedCategory, sortBy], () => {
       currentPage.value = 1
       fetchBooks()
@@ -199,6 +180,21 @@ export default {
 
     // 페이지 변경시 도서 목록 새로고침
     watch(currentPage, fetchBooks)
+
+    // 쿼리스트링(q) 변경 시 검색어와 도서 목록 동기화
+    watch(
+      () => route.query.q,
+      (newQ) => {
+        searchQuery.value = newQ || ''
+        currentPage.value = 1
+        fetchBooks()
+      }
+    )
+
+    // 카테고리/정렬/페이지 변경 시에도 항상 최신 검색어를 반영
+    watch([selectedCategory, sortBy, currentPage], () => {
+      searchQuery.value = route.query.q || ''
+    })
 
     onMounted(() => {
       fetchCategories()
@@ -224,6 +220,7 @@ export default {
 </script>
 
 <style scoped>
+/* 기존 스타일 그대로 유지 */
 .book-list-page {
   min-height: 100vh;
   display: flex;
@@ -292,7 +289,6 @@ export default {
   background: #f0f0f0;
   border-color: #ccc;
 }
-
 .category-button.active {
   background: #0066cc;
   color: white;
@@ -405,12 +401,10 @@ export default {
   .books-grid {
     grid-template-columns: 1fr;
   }
-
   .filter-section {
     flex-direction: column;
     align-items: stretch;
   }
-
   .filter-select {
     max-width: none;
     width: 100%;

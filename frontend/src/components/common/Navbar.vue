@@ -13,25 +13,36 @@
         <router-link to="/libraries" class="menu-item" aria-label="도서관 찾기 페이지로 이동">도서관 찾기</router-link>
       </div>
 
-      <!-- 검색 바 -->
-      <div class="search-container">
+      <!-- 검색 바 + 자동완성 -->
+      <div class="search-container" style="position:relative;">
         <input 
           type="text"
           v-model="searchQuery"
+          @input="onInput"
           @keyup.enter="handleSearch"
           placeholder="도서 검색..."
           class="search-input"
           aria-label="도서 검색 입력창"
+          autocomplete="off"
         >
         <button @click="handleSearch" class="search-button" aria-label="검색 버튼">
           🔍
         </button>
+        <ul v-if="suggestions.length" class="suggestions-list">
+          <li 
+            v-for="item in suggestions" 
+            :key="item.text + item.type" 
+            @mousedown.prevent="selectSuggestion(item)"
+          >
+            <span class="label">{{ item.type === 'title' ? '제목' : '저자' }} :</span>
+            <span class="highlighted-text" v-html="highlightMatch(item.text, searchQuery)" />
+          </li>
+        </ul>
       </div>
 
-      <!-- 사용자 메뉴 -->
+      <!-- 사용자 메뉴 (생략 가능) -->
       <div class="user-menu">
         <template v-if="isAuthenticated">
-          <!-- 로그인 상태 -->
           <div class="user-profile"
                @click="toggleDropdown"
                @keydown.enter="toggleDropdown"
@@ -50,7 +61,6 @@
           </div>
         </template>
         <template v-else>
-          <!-- 비로그인 상태 -->
           <router-link to="/auth/login" class="auth-button login" aria-label="로그인 페이지로 이동">로그인</router-link>
           <router-link to="/auth/signup" class="auth-button signup" aria-label="회원가입 페이지로 이동">회원가입</router-link>
         </template>
@@ -60,10 +70,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
+import axios from 'axios'
 
 const authStore = useAuthStore()
 const { user, isAuthenticated } = storeToRefs(authStore)
@@ -71,13 +82,55 @@ const router = useRouter()
 
 const searchQuery = ref('')
 const showDropdown = ref(false)
+const suggestions = ref([])
+let timer = null
+
+function onInput() {
+  clearTimeout(timer)
+  if (!searchQuery.value.trim()) {
+    suggestions.value = []
+    return
+  }
+  timer = setTimeout(fetchSuggestions, 200)
+}
+
+function reorderSuggestions(list, query) {
+  if (!query) return list
+  const q = query.trim().toLowerCase()
+  // 완전 일치하는 항목(대소문자 무시)
+  const exact = list.filter(
+    item => item.text.toLowerCase() === q
+  )
+  const rest = list.filter(
+    item => item.text.toLowerCase() !== q
+  )
+  return [...exact, ...rest]
+}
+
+async function fetchSuggestions() {
+  try {
+    const resp = await axios.get('/api/books/search/suggestions/', {
+      params: { q: searchQuery.value }
+    })
+    suggestions.value = reorderSuggestions(resp.data, searchQuery.value)
+  } catch (e) {
+    suggestions.value = []
+  }
+}
+
+function selectSuggestion(item) {
+  searchQuery.value = item.text
+  suggestions.value = []
+  handleSearch()
+}
 
 function handleSearch() {
   if (searchQuery.value.trim()) {
     router.push({
       path: '/books',
-      query: { search: searchQuery.value }
+      query: { q: searchQuery.value }
     })
+    suggestions.value = []
   }
 }
 
@@ -111,8 +164,26 @@ function handleTabKey(event) {
 function handleLogout() {
   authStore.logout()
   showDropdown.value = false
-  // 라우터 이동은 store에서 처리하거나, 여기서 처리해도 무방
-  // router.push('/auth/login')
+}
+
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, function(m) {
+    return ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[m]
+  })
+}
+function highlightMatch(text, query) {
+  if (!query) return escapeHtml(text)
+  const re = new RegExp(`(${escapeRegExp(query)})`, 'gi')
+  return escapeHtml(text).replace(re, '<span class="blue">$1</span>')
 }
 
 onMounted(() => {
@@ -121,7 +192,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 기존 스타일 그대로 사용 */
 .navbar {
   background-color: #fff;
   border-bottom: 1px solid #eaeaea;
@@ -160,6 +230,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  position: relative;
 }
 .search-input {
   padding: 0.5rem 1rem;
@@ -178,6 +249,32 @@ onMounted(() => {
 }
 .search-button:hover {
   background-color: #0056b3;
+}
+.suggestions-list {
+  position: absolute;
+  left: 0; right: 0; top: 100%;
+  background: #fff;
+  border: 1px solid #ddd;
+  z-index: 100;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0; padding: 0;
+}
+.suggestions-list li {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  display: flex;
+  gap: 0.5rem;
+  color: #444;
+}
+.label {
+  font-weight: 500;
+  margin-right: 0.5em;
+  color: #888;
+}
+.blue {
+  color: #1976d2;
+  font-weight: bold;
 }
 .user-menu {
   position: relative;
