@@ -1,44 +1,37 @@
-<!-- 
-  LoginPage 컴포넌트
-  역할: 사용자 로그인 페이지
-  기능:
-    - 이메일/비밀번호 로그인
-    - 소셜 로그인 (카카오/네이버/구글)
-    - 회원가입, 비밀번호 재설정 링크
--->
 <template>
   <div class="login-page">
     <div class="login-container">
       <h1>로그인</h1>
-      
+
+      <!-- 로그인 폼 -->
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
-          <label for="email">이메일</label>
-          <input 
+          <label for="email">아이디 또는 이메일</label>
+          <input
             id="email"
             v-model="form.email"
-            type="email"
+            type="text"
             required
-            placeholder="이메일을 입력하세요"
+            placeholder="아이디 또는 이메일을 입력하세요"
             class="form-input"
-          >
+          />
         </div>
 
         <div class="form-group">
           <label for="password">비밀번호</label>
-          <input 
+          <input
             id="password"
             v-model="form.password"
             type="password"
             required
             placeholder="비밀번호를 입력하세요"
             class="form-input"
-          >
+          />
         </div>
 
         <div class="form-actions">
           <label class="remember-me">
-            <input type="checkbox" v-model="form.rememberMe">
+            <input type="checkbox" v-model="form.rememberMe" />
             로그인 상태 유지
           </label>
           <router-link to="/auth/password-reset" class="forgot-password">
@@ -47,10 +40,11 @@
         </div>
 
         <button type="submit" class="login-button" :disabled="isLoading">
-          {{ isLoading ? '로그인 중...' : '로그인' }}
+          {{ isLoading ? "로그인 중..." : "로그인" }}
         </button>
       </form>
 
+      <!-- 소셜 로그인 -->
       <div class="social-login">
         <h2>소셜 계정으로 로그인</h2>
         <div class="social-buttons">
@@ -66,53 +60,136 @@
         </div>
       </div>
 
+      <!-- 회원가입 링크 -->
       <div class="signup-link">
         계정이 없으신가요?
         <router-link to="/auth/signup">회원가입</router-link>
       </div>
+
+      <!-- 에러 메시지 -->
+      <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
     </div>
   </div>
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
-  name: 'LoginPage',
+  name: "LoginPage",
   data() {
     return {
       form: {
-        email: '',
-        password: '',
-        rememberMe: false
+        email: "",
+        password: "",
+        rememberMe: false,
       },
-      isLoading: false
-    }
+      isLoading: false,
+      errorMessage: "",
+    };
   },
   methods: {
+    // 로그인 처리
     async handleLogin() {
+      this.isLoading = true;
+      this.errorMessage = "";
+
       try {
-        this.isLoading = true
-        // TODO: API 연동 시 구현
-        // const response = await api.post('/auth/login', this.form)
-        // this.$store.commit('setUser', response.data.user)
-        // this.$router.push('/')
+        // 이메일 형식 검증 (이메일 입력 시에만 적용)
+        const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+        // 이메일 형식인 경우에만 유효성 검사 실행
+        if (this.form.email.includes('@') && !emailPattern.test(this.form.email.trim())) {
+          this.errorMessage = "유효한 이메일 주소를 입력해주세요.";
+          return;
+        }
+
+        // 로그인 데이터 전송 (API 명세에 맞게 구성)
+        // API 명세: POST /api/accounts/login/
+        // dj-rest-auth는 기본적으로 username과 password를 요구합니다
+        const loginData = {
+          username: this.form.email.trim(), // 이메일을 username으로 사용
+          password: this.form.password,
+        };
+
+        console.log("로그인 시도:", { username: loginData.username });
+        
+        const response = await axios.post("/api/accounts/login/", loginData);
+        console.log("로그인 응답:", response.data);
+
+        // 응답 데이터에서 토큰과 사용자 정보 저장
+        const { access, refresh, user } = response.data;
+        localStorage.setItem("access_token", access);
+        localStorage.setItem("refresh_token", refresh || ""); // refresh 토큰이 없는 경우 빈 문자열 저장
+        localStorage.setItem("user", JSON.stringify(user));
+
+        // 인증 헤더 설정
+        axios.defaults.headers.common["Authorization"] = `Bearer ${access}`;
+
+        // 로그인 상태 유지 옵션 처리
+        if (this.form.rememberMe) {
+          localStorage.setItem("rememberMe", "true");
+        } else {
+          localStorage.removeItem("rememberMe");
+        }
+
+        // 메인 페이지로 이동
+        this.$router.push("/");
       } catch (error) {
-        console.error('Login failed:', error)
-        // TODO: 에러 처리
+        console.error("Login failed:", error);
+
+        // DRF의 에러 응답 처리
+        if (error.response && error.response.data) {
+          const errorData = error.response.data;
+          
+          if (typeof errorData === "string") {
+            this.errorMessage = errorData;
+          } else if (errorData.detail) {
+            this.errorMessage = errorData.detail;
+          } else if (errorData.non_field_errors) {
+            // dj-rest-auth는 종종 non_field_errors에 인증 관련 오류를 담습니다
+            this.errorMessage = errorData.non_field_errors.join(", ");
+          } else {
+            // 필드별 에러 메시지 처리 (SignupPage와 유사하게)
+            const errorMessages = [];
+            for (const field in errorData) {
+              if (Array.isArray(errorData[field])) {
+                errorMessages.push(`${field}: ${errorData[field].join(", ")}`);
+              } else {
+                errorMessages.push(`${field}: ${errorData[field]}`);
+              }
+            }
+            
+            if (errorMessages.length > 0) {
+              this.errorMessage = errorMessages.join("\n");
+            } else {
+              this.errorMessage = "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.";
+            }
+          }
+        } else {
+          this.errorMessage = "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+        }
       } finally {
-        this.isLoading = false
+        this.isLoading = false;
       }
     },
+
+    // 소셜 로그인 처리
     async socialLogin(provider) {
       try {
-        // TODO: API 연동 시 구현
-        console.log(`Social login with ${provider}`)
-        // window.location.href = `/api/auth/${provider}`
+        console.log(`소셜 로그인 시도: ${provider}`);
+        
+        // 소셜 로그인 엔드포인트로 리다이렉트
+        const socialLoginUrl = `/api/auth/${provider}`;
+        console.log(`리다이렉트 URL: ${socialLoginUrl}`);
+        
+        window.location.href = socialLoginUrl;
       } catch (error) {
-        console.error('Social login failed:', error)
+        console.error("Social login failed:", error);
+        this.errorMessage = "소셜 로그인에 실패했습니다. 다시 시도해주세요.";
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -129,7 +206,7 @@ export default {
   background: white;
   padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 400px;
 }
@@ -198,12 +275,12 @@ h1 {
 }
 
 .social-button.kakao {
-  background: #FEE500;
+  background: #fee500;
   color: #000000;
 }
 
 .social-button.naver {
-  background: #03C75A;
+  background: #03c75a;
   color: white;
 }
 
@@ -236,5 +313,11 @@ h1 {
   gap: 0.5rem;
   color: #666;
   font-size: 0.9rem;
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+  margin-top: 1rem;
 }
 </style>
