@@ -14,5 +14,9 @@ urlpatterns = [
     path('<int:pk>/like/', views.book_like, name='book_like'),
     
     # 카테고리 목록 조회
-    path('categories/', views.category_list, name='category_list'),
+    path('categories/', views.category_list, name='category_list'),    # 도서 검색
+    path('search/', views.search_books, name='search_books'),
+    
+    # 검색어 자동완성
+    path('search/suggestions/', views.search_suggestions, name='search_suggestions'),
 ]

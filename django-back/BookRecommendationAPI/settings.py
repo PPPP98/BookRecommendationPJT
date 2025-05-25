@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+# Search settings
+SEARCH_RESULTS_PER_PAGE = 25
 
 SITE_ID = 1
 
@@ -202,6 +204,32 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
+# Cache 설정
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5분
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,  # 최대 캐시 엔트리 수
+        }
+    }
+}
+
 # 미디어 파일 설정
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Elasticsearch configuration
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': ['http://localhost:9200'],
+        'verify_certs': False,
+        'use_ssl': False,
+        'http_auth': None
+    },
+}
+
+# 검색 결과의 정확도를 높이기 위한 설정
+ELASTICSEARCH_DSL_AUTOSYNC = True
+ELASTICSEARCH_DSL_AUTO_REFRESH = True
