@@ -5,7 +5,7 @@
       <div class="profile-section">
         <div class="profile-image"></div>
         <div class="profile-info">
-          <h2><사용자명 추가할것></h2>
+          <h2>{{ username ? username + '님' : '게스트' }}</h2>
           <p>당신이 좋아할 만한 도서를 AI가 추천해드릴 것입니다.</p>
         </div>
       </div>
@@ -25,8 +25,8 @@
             v-for="category in categories" 
             :key="category.id"
             class="category-button"
-            :class="{ active: selectedCategory === category.id }"
-            @click="selectedCategory = category.id"
+            :class="{ active: selectedCategory === category.name }"
+            @click="selectedCategory = category.name"
             :disabled="loading"
           >
             {{ category.name }}
@@ -88,6 +88,8 @@ import axios from 'axios'
 import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
 import BookCard from '@/components/books/BookCard.vue'
+import { useAuthStore } from '@/stores/auth'
+import { storeToRefs } from 'pinia'
 
 export default {
   name: 'BookList',
@@ -108,12 +110,20 @@ export default {
     const itemsPerPage = ref(25)
     const selectedCategory = ref('')
     const sortBy = ref('pub_date')
-    // 검색창 제거, 대신 쿼리스트링 q만 사용
     const searchQuery = ref(route.query.q || '')
+
+    // 사용자 정보 가져오기
+    const authStore = useAuthStore()
+    const { user } = storeToRefs(authStore)
+    const username = computed(() =>
+      user.value?.nickname ||
+      user.value?.username ||
+      user.value?.email ||
+      ''
+    )
 
     const totalPages = computed(() => Math.ceil(totalBooks.value / itemsPerPage.value))
 
-    // 도서 목록 조회
     const fetchBooks = async () => {
       loading.value = true
       error.value = null
@@ -123,18 +133,13 @@ export default {
           page_size: itemsPerPage.value,
           ordering: sortBy.value
         }
-        // 카테고리 필터
         if (selectedCategory.value !== '') {
-          const selectedCategoryObj = categories.value.find(cat => cat.id === selectedCategory.value)
-          if (selectedCategoryObj) {
-            params.category = selectedCategoryObj.name
-          }
+          params.category = selectedCategory.value
         }
-        // 검색어 연동 (Navbar에서 /books?q=검색어로 이동 시)
         if (searchQuery.value && searchQuery.value.trim()) {
           params.q = searchQuery.value.trim()
         }
-        const response = await axios.get('/api/books/search/', { params })
+        const response = await axios.get('/api/books/', { params })
         books.value = response.data.results
         totalBooks.value = response.data.count
       } catch (err) {
@@ -145,7 +150,6 @@ export default {
       }
     }
 
-    // 카테고리 목록 조회
     const fetchCategories = async () => {
       try {
         const response = await axios.get('/api/books/categories/')
@@ -160,28 +164,23 @@ export default {
       }
     }
 
-    // 페이지 변경 핸들러
     const handlePageChange = (page) => {
       if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page
       }
     }
 
-    // 상세 페이지 이동
     const navigateToDetail = (bookId) => {
       router.push(`/books/${bookId}`)
     }
 
-    // 필터/정렬 변경시 첫 페이지로 이동 후 도서 목록 새로고침
     watch([selectedCategory, sortBy], () => {
       currentPage.value = 1
       fetchBooks()
     })
 
-    // 페이지 변경시 도서 목록 새로고침
     watch(currentPage, fetchBooks)
 
-    // 쿼리스트링(q) 변경 시 검색어와 도서 목록 동기화
     watch(
       () => route.query.q,
       (newQ) => {
@@ -191,7 +190,6 @@ export default {
       }
     )
 
-    // 카테고리/정렬/페이지 변경 시에도 항상 최신 검색어를 반영
     watch([selectedCategory, sortBy, currentPage], () => {
       searchQuery.value = route.query.q || ''
     })
@@ -213,14 +211,15 @@ export default {
       selectedCategory,
       sortBy,
       handlePageChange,
-      navigateToDetail
+      navigateToDetail,
+      username
     }
   }
 }
 </script>
 
 <style scoped>
-/* 기존 스타일 그대로 유지 */
+/* 기존 스타일 유지 */
 .book-list-page {
   min-height: 100vh;
   display: flex;
