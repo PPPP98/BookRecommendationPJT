@@ -27,8 +27,15 @@ class ThreadCreateSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "content", "rating"]
 
 
+class BookSimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = ["id", "title", "author", "cover"]
+
+
 class ThreadDetailSerializer(serializers.ModelSerializer):
     user = UserSimpleSerializer(read_only=True)
+    book = BookSimpleSerializer(read_only=True)  # book 정보 추가
     comments = CommentSerializer(many=True, read_only=True)
     is_liked = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
@@ -43,6 +50,7 @@ class ThreadDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "user",
+            "book",  # book 필드 추가
             "comments",
             "is_liked",
             "like_count",
