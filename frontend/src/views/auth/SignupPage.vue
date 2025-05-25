@@ -330,14 +330,14 @@ export default {
         agreement.value.agreePrivacy
 
       // 디버깅용 로그
-      console.log('Form Validation Status:', {
-        hasRequiredFields,
-        emailValid,
-        passwordValid,
-        duplicateChecksValid,
-        agreementsValid,
-        passwordValidationStatus: passwordValidation.value
-      })
+      // console.log('Form Validation Status:', {
+      //   hasRequiredFields,
+      //   emailValid,
+      //   passwordValid,
+      //   duplicateChecksValid,
+      //   agreementsValid,
+      //   passwordValidationStatus: passwordValidation.value
+      // })
 
       return hasRequiredFields && 
         emailValid && 
