@@ -63,7 +63,12 @@ def thread_update_delete(request, pk):
         )
 
     if request.method == "PUT":
-        serializer = ThreadDetailSerializer(thread, data=request.data, partial=True)
+        serializer = ThreadDetailSerializer(
+            thread, 
+            data=request.data, 
+            context={'request': request},
+            partial=True
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
