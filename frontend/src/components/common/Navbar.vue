@@ -5,8 +5,6 @@
     - 로고 및 메인 메뉴
     - 검색 바
     - 로그인/회원가입 또는 사용자 메뉴
-  Props:
-    - user: Object - 현재 로그인한 사용자 정보 (선택)
 -->
 <template>
   <nav class="navbar">
@@ -39,10 +37,10 @@
 
       <!-- 사용자 메뉴 -->
       <div class="user-menu">
-        <template v-if="user">
+        <template v-if="isAuthenticated">
           <!-- 로그인 상태 -->
           <div class="user-profile" @click="toggleDropdown">
-            <img :src="user.profile_image" :alt="user.username" class="profile-image">
+            <img :src="user.profile_image || '/default-profile.png'" :alt="user.username" class="profile-image">
             <span class="username">{{ user.username }}</span>
             
             <!-- 드롭다운 메뉴 -->
@@ -65,12 +63,35 @@
 </template>
 
 <script>
+import { useAuthStore } from '@/stores/auth'
+import { storeToRefs } from 'pinia'
+import { onMounted, watch } from 'vue'
+
 export default {
   name: 'Navbar',
-  props: {
-    user: {
-      type: Object,
-      default: null
+  setup() {
+    const authStore = useAuthStore()
+    const { user, isAuthenticated } = storeToRefs(authStore)
+
+    onMounted(() => {
+      console.log('NavBar mounted')
+      authStore.initializeAuth()
+      console.log('Auth state after init:', { 
+        isAuthenticated: isAuthenticated.value,
+        user: user.value,
+        hasToken: !!authStore.accessToken
+      })
+    })
+
+    // 인증 상태 변경 감지
+    watch(isAuthenticated, (newValue) => {
+      console.log('Auth state changed:', newValue)
+    })
+
+    return {
+      user,
+      isAuthenticated,
+      authStore
     }
   },
   data() {
@@ -91,11 +112,14 @@ export default {
     toggleDropdown() {
       this.showDropdown = !this.showDropdown
     },
-    handleLogout() {
-      // TODO: API 연동 시 구현
-      // await api.post('/auth/logout')
-      // this.$store.commit('clearUser')
-      this.$router.push('/auth/login')
+    async handleLogout() {
+      try {
+        await this.authStore.logout()
+        this.showDropdown = false
+        this.$router.push('/auth/login')
+      } catch (error) {
+        console.error('로그아웃 실패:', error)
+      }
     }
   },
   mounted() {
