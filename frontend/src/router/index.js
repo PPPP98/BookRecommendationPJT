@@ -47,9 +47,10 @@ const routes = [
     props: true
   },
   {
-    path: '/threads/write',
+    path: '/threads/write/:bookId?',
     name: 'ThreadWrite',
-    component: () => import('@/views/community/ThreadWrite.vue')
+    component: () => import('@/views/community/ThreadWrite.vue'),
+    props: true
   },
   // 도서관 관련 라우트
   {

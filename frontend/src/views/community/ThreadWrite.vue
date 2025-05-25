@@ -3,6 +3,10 @@
     <Navbar />
     <main class="main-content">
       <h1>새 글 작성</h1>
+      <div class="selected-book" v-if="selectedBook">
+        <strong>선택한 도서:</strong>
+        <span class="book-title">{{ selectedBook.title }} <small>({{ selectedBook.author }})</small></span>
+      </div>
       <form @submit.prevent="submitThread">
         <div class="form-group">
           <label for="title">제목</label>
@@ -13,19 +17,6 @@
             required
             placeholder="제목을 입력하세요"
           />
-        </div>
-        <div class="form-group">
-          <label for="book">관련 도서</label>
-          <select
-            id="book"
-            v-model="thread.bookId"
-            required
-          >
-            <option value="" disabled>도서를 선택하세요</option>
-            <option v-for="book in books" :key="book.id" :value="book.id">
-              {{ book.title }} ({{ book.author }})
-            </option>
-          </select>
         </div>
         <div class="form-group">
           <label for="rating">평점</label>
@@ -71,17 +62,23 @@ import Navbar from '@/components/common/Navbar.vue'
 
 export default {
   name: 'ThreadWrite',
+  props: {
+    bookId: {
+      type: [String, Number],
+      required: true
+    }
+  },
   components: {
     Footer,
     Navbar
   },
   data() {
     return {
-      books: [],
+      selectedBook: null, // 선택한 도서 정보
       thread: {
         title: '',
         content: '',
-        bookId: '',
+        bookId: this.bookId,
         rating: 0
       },
       loading: false,
@@ -99,27 +96,26 @@ export default {
     }
   },
   methods: {
-    async fetchBooks() {
+    async fetchBook() {
       try {
         const token = localStorage.getItem('access_token')
         if (!token) {
-          // 토큰이 없으면 로그인 페이지로 이동
           this.$router.push('/auth/login')
           return
         }
-        const response = await axios.get('/api/books/', {
+        // 선택한 도서 1개만 조회
+        const response = await axios.get(`/api/books/${this.bookId}/`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         })
-        this.books = response.data.results
+        this.selectedBook = response.data
       } catch (err) {
-        console.error('도서 목록 가져오기 실패:', err)
+        console.error('도서 정보 가져오기 실패:', err)
         if (err.response && err.response.status === 401) {
-          // 401이면 로그인 페이지로 이동
           this.$router.push('/auth/login')
         } else {
-          this.error = '도서 목록을 불러오는데 실패했습니다.'
+          this.error = '도서 정보를 불러오는데 실패했습니다.'
         }
       }
     },
@@ -129,11 +125,6 @@ export default {
       this.error = null
       try {
         const token = localStorage.getItem('access_token')
-        if (!token) {
-          this.$router.push('/auth/login')
-          this.loading = false
-          return
-        }
         const response = await axios.post(
           `/api/threads/books/${this.thread.bookId}/create/`,
           {
@@ -151,12 +142,11 @@ export default {
         this.$router.push('/community')
       } catch (error) {
         console.error('스레드 생성 실패:', error)
-        if (error.response && error.response.status === 401) {
-          this.$router.push('/auth/login')
-        } else {
+        if (error.response) {
           this.error =
-            (error.response && (error.response.data.message || error.response.data.error)) ||
-            '스레드 생성에 실패했습니다.'
+            error.response.data?.detail || '스레드 생성 중 오류가 발생했습니다.'
+        } else {
+          this.error = '서버와의 연결에 문제가 발생했습니다.'
         }
       } finally {
         this.loading = false
@@ -164,7 +154,7 @@ export default {
     }
   },
   async mounted() {
-    await this.fetchBooks()
+    await this.fetchBook()
   }
 }
 </script>
@@ -184,6 +174,15 @@ export default {
 h1 {
   margin-bottom: 2rem;
 }
+.selected-book {
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+.book-title {
+  color: #0066cc;
+  font-weight: bold;
+  margin-left: 0.5rem;
+}
 .form-group {
   margin-bottom: 1.5rem;
 }
@@ -192,7 +191,7 @@ label {
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
-input, select, textarea {
+input, textarea {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #ddd;
