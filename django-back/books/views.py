@@ -123,13 +123,11 @@ def book_like(request, pk):
 def search_books(request):
     """
     도서 검색 API
-    - 제목, 저자, 출판사, 설명 검색
-    - 필드 지정 검색
-    - 출판일 범위 검색
-    - 검색 결과 스코어링 및 정렬
-    - 요청 제한: 인증 사용자 60회/분, 비인증 사용자 30회/분
+    - 제목 검색: 완전 일치 > 시작 일치 > 부분 일치 순으로 정렬
+    - 저자 검색: 완전 일치 > 시작 일치 > 부분 일치 순으로 정렬
+    - 통합 검색: 제목 > 저자 > 설명 순으로 정렬
     """
-    query = request.GET.get("q", "")
+    query = request.GET.get("q", "").strip()
     field = request.GET.get("field", "all")  # 검색 필드 (title, author, all)
     pub_date_from = request.GET.get("pub_date_from", None)
     pub_date_to = request.GET.get("pub_date_to", None)
@@ -140,30 +138,28 @@ def search_books(request):
         thread_count=Count("threads", distinct=True),
     )
 
-    if query:
-        # 검색어 전처리
+    if not query:  # 검색어가 없으면 최신순 정렬
+        queryset = queryset.order_by('-pub_date')
+    else:
+        # 검색어 전처리 및 쿼리 생성
         search_tokens = preprocess_search_query(query)
+        search_query = build_search_query(search_tokens, field)
+        queryset = queryset.filter(search_query)
         
-        if search_tokens:
-            # 검색 쿼리 생성
-            search_query = build_search_query(search_tokens, field)
-            queryset = queryset.filter(search_query)
-            
-            # 검색 결과에 스코어 추가 및 정렬
-            results = []
-            for book in queryset:
-                score = calculate_search_score(book, search_tokens)
-                results.append({
-                    'book': book,
-                    'score': score
-                })
-            
-            # 스코어 기준 정렬
-            results.sort(key=lambda x: x['score'], reverse=True)
-            
-            # 정렬된 결과로 쿼리셋 재구성
-            book_ids = [result['book'].id for result in results]
-            queryset = Book.objects.filter(id__in=book_ids)
+        # Case문을 사용하여 정렬 우선순위 설정
+        exact_query = ' '.join(search_tokens)
+        queryset = queryset.annotate(
+            search_rank=Case(
+                When(title__iexact=exact_query, then=100),
+                When(title__istartswith=exact_query, then=80),
+                When(title__icontains=exact_query, then=60),
+                When(author__iexact=exact_query, then=40),
+                When(author__icontains=exact_query, then=30),
+                When(description__icontains=exact_query, then=20),
+                default=0,
+                output_field=IntegerField(),
+            )
+        ).order_by('-search_rank', '-pub_date')
 
     # 출판일 범위 검색
     if pub_date_from:
@@ -174,11 +170,8 @@ def search_books(request):
     # 페이지네이션
     paginator = CustomPagination()
     page = paginator.paginate_queryset(queryset, request)
-
-    # 시리얼라이저를 통한 응답 데이터 생성
     serializer = BookListSerializer(page, many=True)
     
-    # 응답에 메타데이터 추가
     response_data = {
         'count': paginator.page.paginator.count,
         'next': paginator.get_next_link(),
@@ -186,10 +179,9 @@ def search_books(request):
         'results': serializer.data
     }
     
-    if query and search_tokens:
+    if query:
         response_data['search_info'] = {
             'query': query,
-            'tokens': search_tokens,
             'field': field
         }
     
