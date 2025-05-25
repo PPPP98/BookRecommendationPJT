@@ -40,7 +40,7 @@
         </ul>
       </div>
 
-      <!-- 사용자 메뉴 (생략 가능) -->
+      <!-- 사용자 메뉴 -->
       <div class="user-menu">
         <template v-if="isAuthenticated">
           <div class="user-profile"
@@ -50,7 +50,12 @@
                tabindex="0"
                aria-label="사용자 메뉴 열기"
                :aria-expanded="showDropdown">
-            <img :src="user?.profile_image || '/default-profile.png'" :alt="user?.username || '프로필'" class="profile-image">
+            <img
+              :src="user?.profile_image || defaultProfile"
+              :alt="user?.username || '프로필'"
+              class="profile-image"
+              @error="onImgError"
+            >
             <span class="username">{{ user?.username }}</span>
             <div v-if="showDropdown" class="dropdown-menu" @keydown.tab="handleTabKey">
               <router-link to="/mypage" class="dropdown-item" aria-label="마이페이지로 이동">마이페이지</router-link>
@@ -83,6 +88,7 @@ const router = useRouter()
 const searchQuery = ref('')
 const showDropdown = ref(false)
 const suggestions = ref([])
+const defaultProfile = '/default-profile.png'
 let timer = null
 
 function onInput() {
@@ -97,13 +103,8 @@ function onInput() {
 function reorderSuggestions(list, query) {
   if (!query) return list
   const q = query.trim().toLowerCase()
-  // 완전 일치하는 항목(대소문자 무시)
-  const exact = list.filter(
-    item => item.text.toLowerCase() === q
-  )
-  const rest = list.filter(
-    item => item.text.toLowerCase() !== q
-  )
+  const exact = list.filter(item => item.text.toLowerCase() === q)
+  const rest = list.filter(item => item.text.toLowerCase() !== q)
   return [...exact, ...rest]
 }
 
@@ -164,6 +165,13 @@ function handleTabKey(event) {
 function handleLogout() {
   authStore.logout()
   showDropdown.value = false
+}
+
+function onImgError(e) {
+  // 이미지가 404 등으로 로딩 실패하면 기본 이미지로 대체
+  if (!e.target.src.endsWith(defaultProfile)) {
+    e.target.src = defaultProfile
+  }
 }
 
 function escapeRegExp(s) {
