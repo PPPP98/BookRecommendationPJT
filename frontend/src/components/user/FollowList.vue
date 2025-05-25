@@ -1,33 +1,29 @@
-<!-- 
-  FollowList 컴포넌트
-  역할: 팔로워/팔로잉 목록을 표시
-  Props:
-    - users: Array - 사용자 목록
-    - type: String - 'followers' 또는 'following'
-    - currentUserId: Number - 현재 로그인한 사용자 ID
-  이벤트:
-    - @follow: 팔로우 시 발생
-    - @unfollow: 언팔로우 시 발생
--->
 <template>
   <div class="follow-list">
     <h2>{{ type === 'followers' ? '팔로워' : '팔로잉' }}</h2>
     
     <div class="users-container">
       <div v-for="user in users" :key="user.id" class="user-item">
-        <img :src="user.profile_image" :alt="user.username" class="user-image">
+        <img
+          :src="user.profile_image || '/default-profile.png'"
+          :alt="user.username || '프로필'"
+          class="user-image"
+          @error="onImgError"
+        >
         <div class="user-info">
           <h3>{{ user.username }}</h3>
           <p class="user-stats">
-            글 {{ user.threads.length }} | 팔로워 {{ user.followers.length }}
+            글 {{ Array.isArray(user.threads) ? user.threads.length : 0 }} | 
+            팔로워 {{ Array.isArray(user.followers) ? user.followers.length : 0 }}
           </p>
         </div>
         <button 
           v-if="user.id !== currentUserId"
-          @click="handleFollowAction(user)"
-          :class="['follow-button', { 'following': isFollowing(user.id) }]"
+          @click="toggleFollow(user)"
+          :class="['follow-button', { 'following': user.is_following }]"
+          :disabled="loadingMap[user.id]"
         >
-          {{ isFollowing(user.id) ? '팔로잉' : '팔로우' }}
+          {{ user.is_following ? '팔로잉' : '팔로우' }}
         </button>
       </div>
     </div>
@@ -39,6 +35,10 @@
 </template>
 
 <script>
+import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
+import { storeToRefs } from 'pinia'
+
 export default {
   name: 'FollowList',
   props: {
@@ -56,16 +56,42 @@ export default {
       required: true
     }
   },
+  data() {
+    return {
+      loadingMap: {} // userId: true/false
+    }
+  },
+  setup() {
+    const authStore = useAuthStore()
+    const { accessToken } = storeToRefs(authStore)
+    return { accessToken }
+  },
   methods: {
-    isFollowing(userId) {
-      // TODO: 실제 팔로우 여부 확인 로직 구현
-      return true
+    async toggleFollow(user) {
+      if (!this.accessToken) {
+        alert('로그인이 필요합니다.')
+        return
+      }
+      this.$set(this.loadingMap, user.id, true)
+      try {
+        const response = await axios.post(
+          `/api/accounts/${user.id}/follow/`,
+          {},
+          { headers: { Authorization: `Bearer ${this.accessToken}` } }
+        )
+        // 응답: { id, is_following, follower_count, following_count }
+        user.is_following = response.data.is_following
+        // 필요시 user.follower_count 등도 갱신
+        this.$emit(user.is_following ? 'follow' : 'unfollow', user.id)
+      } catch (e) {
+        alert('팔로우/언팔로우에 실패했습니다.')
+      } finally {
+        this.$set(this.loadingMap, user.id, false)
+      }
     },
-    handleFollowAction(user) {
-      if (this.isFollowing(user.id)) {
-        this.$emit('unfollow', user.id)
-      } else {
-        this.$emit('follow', user.id)
+    onImgError(e) {
+      if (!e.target.src.endsWith('/default-profile.png')) {
+        e.target.src = '/default-profile.png'
       }
     }
   }
@@ -117,11 +143,17 @@ export default {
   background: white;
   color: #0066cc;
   cursor: pointer;
+  transition: background 0.2s, color 0.2s;
 }
 
 .follow-button.following {
   background: #0066cc;
   color: white;
+}
+
+.follow-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .empty-state {

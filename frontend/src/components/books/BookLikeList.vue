@@ -1,21 +1,16 @@
-<!-- 
-  BookLikeList 컴포넌트
-  역할: 사용자가 찜한 도서 목록을 표시
-  Props:
-    - books: Array - 찜한 도서 목록
-    - editable: Boolean - 찜 해제 가능 여부
-  이벤트:
-    - @unlike: 찜 해제 시 발생
--->
 <template>
   <div class="book-like-list">
     <h2>찜한 도서</h2>
     <div class="books-container">
-      <div v-for="book in books" :key="book.id" class="book-item">
+      <div
+        v-for="book in books || []"
+        :key="book.id"
+        class="book-item"
+      >
         <BookCard :book="book">
           <template #actions>
-            <button 
-              v-if="editable" 
+            <button
+              v-if="editable"
               @click.stop="unlikeBook(book.id)"
               class="unlike-button"
             >
@@ -26,7 +21,7 @@
       </div>
     </div>
     
-    <div v-if="books.length === 0" class="empty-state">
+    <div v-if="!books || books.length === 0" class="empty-state">
       찜한 도서가 없습니다.
     </div>
   </div>
@@ -43,7 +38,8 @@ export default {
   props: {
     books: {
       type: Array,
-      required: true
+      required: true,
+      default: () => []
     },
     editable: {
       type: Boolean,

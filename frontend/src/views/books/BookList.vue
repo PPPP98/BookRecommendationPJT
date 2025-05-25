@@ -124,6 +124,7 @@ export default {
 
     const totalPages = computed(() => Math.ceil(totalBooks.value / itemsPerPage.value))
 
+    // 도서 목록 조회
     const fetchBooks = async () => {
       loading.value = true
       error.value = null
@@ -136,10 +137,12 @@ export default {
         if (selectedCategory.value !== '') {
           params.category = selectedCategory.value
         }
+        let url = '/api/books/'
         if (searchQuery.value && searchQuery.value.trim()) {
+          url = '/api/books/search/'
           params.q = searchQuery.value.trim()
         }
-        const response = await axios.get('/api/books/', { params })
+        const response = await axios.get(url, { params })
         books.value = response.data.results
         totalBooks.value = response.data.count
       } catch (err) {
@@ -150,6 +153,7 @@ export default {
       }
     }
 
+    // 카테고리 목록 조회
     const fetchCategories = async () => {
       try {
         const response = await axios.get('/api/books/categories/')

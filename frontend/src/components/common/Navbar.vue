@@ -168,7 +168,6 @@ function handleLogout() {
 }
 
 function onImgError(e) {
-  // 이미지가 404 등으로 로딩 실패하면 기본 이미지로 대체
   if (!e.target.src.endsWith(defaultProfile)) {
     e.target.src = defaultProfile
   }
