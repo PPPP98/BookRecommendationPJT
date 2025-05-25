@@ -14,9 +14,19 @@
             <span v-if="book.pub_date" class="pub-date">| 출간일: {{ book.pub_date }}</span>
           </div>
           <div class="book-category">카테고리: {{ book.category_name }}</div>
-          <div class="book-likes">
-            <span>❤️ {{ book.like_count }}</span>
-            <span v-if="book.is_liked">(내가 찜함)</span>
+          <div class="book-likes-action">
+            <button
+              class="like-button"
+              :class="{ liked: book.is_liked }"
+              @click="toggleLike"
+              :disabled="likeLoading"
+            >
+              <span class="heart">
+                {{ book.is_liked ? '❤️' : '🤍' }}
+              </span>
+              <span class="like-count">{{ book.like_count }}</span>
+              <span class="like-label">좋아요</span>
+            </button>
           </div>
         </div>
       </div>
@@ -78,7 +88,8 @@ export default {
   data() {
     return {
       book: null,
-      error: null
+      error: null,
+      likeLoading: false
     }
   },
   methods: {
@@ -91,8 +102,31 @@ export default {
         console.error('도서 상세 정보 불러오기 실패:', err)
       }
     },
+    async toggleLike() {
+      if (!this.book) return
+      this.likeLoading = true
+      try {
+        const token = localStorage.getItem('access_token')
+        if (!token) {
+          alert('로그인이 필요합니다.')
+          this.$router.push('/auth/login')
+          return
+        }
+        const response = await axios.post(
+          `/api/books/${this.book.id}/like/`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        this.book.is_liked = response.data.liked
+        this.book.like_count = response.data.like_count
+      } catch (err) {
+        alert('좋아요 처리 중 오류가 발생했습니다.')
+        console.error('좋아요 처리 실패:', err)
+      } finally {
+        this.likeLoading = false
+      }
+    },
     navigateToThreadWrite() {
-      // ThreadWrite 라우트에 bookId를 params로 전달
       this.$router.push({ name: 'ThreadWrite', params: { bookId: this.book.id } })
     }
   },
@@ -135,12 +169,50 @@ export default {
   color: #666;
   margin-top: 0.5rem;
 }
-.book-author, .book-category, .book-likes {
+.book-author, .book-category {
   margin-top: 0.7rem;
   color: #444;
 }
-.book-likes {
-  font-size: 1.1rem;
+.book-likes-action {
+  margin-top: 0.7rem;
+}
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 1.15rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  padding: 0.2rem 0.7rem;
+  border-radius: 20px;
+}
+.like-button.liked {
+  background: #ffeaea;
+}
+.like-button:disabled {
+  color: #aaa;
+  background: #f0f0f0;
+  cursor: not-allowed;
+}
+.heart {
+  font-size: 1.3rem;
+  vertical-align: middle;
+}
+.like-count {
+  min-width: 18px;
+  text-align: center;
+  font-size: 1.07rem;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+.like-label {
+  font-size: 1rem;
+  color: #666;
+  margin-left: 2px;
 }
 .book-description {
   margin-bottom: 2rem;
@@ -161,6 +233,9 @@ export default {
 }
 .book-actions {
   margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }
 .thread-write-button {
   background-color: #0066cc;
