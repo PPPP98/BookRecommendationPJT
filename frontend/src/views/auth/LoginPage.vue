@@ -115,6 +115,11 @@ export default {
         
         const response = await axios.post("/api/accounts/login/", loginData);
         console.log("로그인 응답:", response.data);
+        console.log("사용자 정보:", response.data.user);
+        console.log("토큰 정보:", { 
+          access: response.data.access,
+          refresh: response.data.refresh 
+        });
 
         // 응답 데이터에서 토큰과 사용자 정보 저장
         const { access, refresh, user } = response.data;
