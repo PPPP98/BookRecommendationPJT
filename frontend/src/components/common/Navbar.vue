@@ -1,24 +1,16 @@
-<!-- 
-  Navbar 컴포넌트
-  역할: 상단 네비게이션 바
-  기능:
-    - 로고 및 메인 메뉴
-    - 검색 바
-    - 로그인/회원가입 또는 사용자 메뉴
--->
 <template>
   <nav class="navbar">
     <div class="navbar-container">
       <!-- 로고 -->
-      <router-link to="/" class="logo">
+      <router-link to="/" class="logo" aria-label="홈으로 이동">
         📚 Book Community
       </router-link>
 
       <!-- 메인 메뉴 -->
       <div class="main-menu">
-        <router-link to="/books" class="menu-item">도서</router-link>
-        <router-link to="/community" class="menu-item">커뮤니티</router-link>
-        <router-link to="/libraries" class="menu-item">도서관 찾기</router-link>
+        <router-link to="/books" class="menu-item" aria-label="도서 페이지로 이동">도서</router-link>
+        <router-link to="/community" class="menu-item" aria-label="커뮤니티 페이지로 이동">커뮤니티</router-link>
+        <router-link to="/libraries" class="menu-item" aria-label="도서관 찾기 페이지로 이동">도서관 찾기</router-link>
       </div>
 
       <!-- 검색 바 -->
@@ -29,8 +21,9 @@
           @keyup.enter="handleSearch"
           placeholder="도서 검색..."
           class="search-input"
+          aria-label="도서 검색 입력창"
         >
-        <button @click="handleSearch" class="search-button">
+        <button @click="handleSearch" class="search-button" aria-label="검색 버튼">
           🔍
         </button>
       </div>
@@ -39,231 +32,203 @@
       <div class="user-menu">
         <template v-if="isAuthenticated">
           <!-- 로그인 상태 -->
-          <div class="user-profile" @click="toggleDropdown">
-            <img :src="user.profile_image || '/default-profile.png'" :alt="user.username" class="profile-image">
-            <span class="username">{{ user.username }}</span>
-            
-            <!-- 드롭다운 메뉴 -->
-            <div v-if="showDropdown" class="dropdown-menu">
-              <router-link to="/mypage" class="dropdown-item">마이페이지</router-link>
-              <router-link to="/mypage/likes" class="dropdown-item">찜한 도서</router-link>
-              <router-link to="/mypage/threads" class="dropdown-item">내가 쓴 글</router-link>
-              <a @click="handleLogout" class="dropdown-item">로그아웃</a>
+          <div class="user-profile"
+               @click="toggleDropdown"
+               @keydown.enter="toggleDropdown"
+               @keydown.esc="closeDropdown"
+               tabindex="0"
+               aria-label="사용자 메뉴 열기"
+               :aria-expanded="showDropdown">
+            <img :src="user?.profile_image || '/default-profile.png'" :alt="user?.username || '프로필'" class="profile-image">
+            <span class="username">{{ user?.username }}</span>
+            <div v-if="showDropdown" class="dropdown-menu" @keydown.tab="handleTabKey">
+              <router-link to="/mypage" class="dropdown-item" aria-label="마이페이지로 이동">마이페이지</router-link>
+              <router-link to="/mypage/likes" class="dropdown-item" aria-label="찜한 도서 페이지로 이동">찜한 도서</router-link>
+              <router-link to="/mypage/threads" class="dropdown-item" aria-label="내가 쓴 글 페이지로 이동">내가 쓴 글</router-link>
+              <a @click="handleLogout" class="dropdown-item" aria-label="로그아웃">로그아웃</a>
             </div>
           </div>
         </template>
         <template v-else>
           <!-- 비로그인 상태 -->
-          <router-link to="/auth/login" class="auth-button login">로그인</router-link>
-          <router-link to="/auth/signup" class="auth-button signup">회원가입</router-link>
+          <router-link to="/auth/login" class="auth-button login" aria-label="로그인 페이지로 이동">로그인</router-link>
+          <router-link to="/auth/signup" class="auth-button signup" aria-label="회원가입 페이지로 이동">회원가입</router-link>
         </template>
       </div>
     </div>
   </nav>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
-import { onMounted, watch } from 'vue'
 
-export default {
-  name: 'Navbar',
-  setup() {
-    const authStore = useAuthStore()
-    const { user, isAuthenticated } = storeToRefs(authStore)
+const authStore = useAuthStore()
+const { user, isAuthenticated } = storeToRefs(authStore)
+const router = useRouter()
 
-    onMounted(() => {
-      console.log('NavBar mounted')
-      authStore.initializeAuth()
-      console.log('Auth state after init:', { 
-        isAuthenticated: isAuthenticated.value,
-        user: user.value,
-        hasToken: !!authStore.accessToken
-      })
+const searchQuery = ref('')
+const showDropdown = ref(false)
+
+function handleSearch() {
+  if (searchQuery.value.trim()) {
+    router.push({
+      path: '/books',
+      query: { search: searchQuery.value }
     })
-
-    // 인증 상태 변경 감지
-    watch(isAuthenticated, (newValue) => {
-      console.log('Auth state changed:', newValue)
-    })
-
-    return {
-      user,
-      isAuthenticated,
-      authStore
-    }
-  },
-  data() {
-    return {
-      searchQuery: '',
-      showDropdown: false
-    }
-  },
-  methods: {
-    handleSearch() {
-      if (this.searchQuery.trim()) {
-        this.$router.push({
-          path: '/books',
-          query: { search: this.searchQuery }
-        })
-      }
-    },
-    toggleDropdown() {
-      this.showDropdown = !this.showDropdown
-    },
-    async handleLogout() {
-      try {
-        await this.authStore.logout()
-        this.showDropdown = false
-        this.$router.push('/auth/login')
-      } catch (error) {
-        console.error('로그아웃 실패:', error)
-      }
-    }
-  },
-  mounted() {
-    // 드롭다운 외부 클릭 시 닫기
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.user-profile')) {
-        this.showDropdown = false
-      }
-    })
-  },
-  beforeDestroy() {
-    document.removeEventListener('click', this.handleOutsideClick)
   }
 }
+
+function toggleDropdown() {
+  showDropdown.value = !showDropdown.value
+  if (showDropdown.value) {
+    nextTick(() => {
+      const firstItem = document.querySelector('.dropdown-item')
+      if (firstItem) firstItem.focus()
+    })
+  }
+}
+
+function closeDropdown() {
+  showDropdown.value = false
+}
+
+function handleTabKey(event) {
+  const focusableItems = document.querySelectorAll('.dropdown-item')
+  const firstItem = focusableItems[0]
+  const lastItem = focusableItems[focusableItems.length - 1]
+  if (event.shiftKey && document.activeElement === firstItem) {
+    event.preventDefault()
+    lastItem.focus()
+  } else if (!event.shiftKey && document.activeElement === lastItem) {
+    event.preventDefault()
+    firstItem.focus()
+  }
+}
+
+function handleLogout() {
+  authStore.logout()
+  showDropdown.value = false
+  // 라우터 이동은 store에서 처리하거나, 여기서 처리해도 무방
+  // router.push('/auth/login')
+}
+
+onMounted(() => {
+  authStore.initializeAuth()
+})
 </script>
 
 <style scoped>
+/* 기존 스타일 그대로 사용 */
 .navbar {
-  background: white;
-  border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  background-color: #fff;
+  border-bottom: 1px solid #eaeaea;
+  padding: 0.5rem 1rem;
 }
-
 .navbar-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem;
+  width: 100%;
 }
-
 .logo {
   font-size: 1.5rem;
   font-weight: bold;
-  text-decoration: none;
   color: #333;
 }
-
 .main-menu {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
 }
-
 .menu-item {
-  text-decoration: none;
+  position: relative;
+  padding: 0.5rem 1rem;
   color: #333;
-  font-weight: 500;
+  text-decoration: none;
+  border-radius: 0.25rem;
+  transition: background-color 0.3s;
 }
-
-.menu-item:hover {
-  color: #0066cc;
+.menu-item:hover,
+.menu-item:focus {
+  background-color: #f0f0f0;
 }
-
 .search-container {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
-  max-width: 300px;
-  flex: 1;
 }
-
 .search-input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  width: 250px;
 }
-
 .search-button {
   padding: 0.5rem 1rem;
-  background: #0066cc;
-  color: white;
+  background-color: #007bff;
+  color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 0.25rem;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
-
+.search-button:hover {
+  background-color: #0056b3;
+}
 .user-menu {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.auth-button {
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-}
-
-.auth-button.login {
-  color: #0066cc;
-}
-
-.auth-button.signup {
-  background: #0066cc;
-  color: white;
-}
-
-.user-profile {
   position: relative;
+}
+.user-profile {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
 }
-
 .profile-image {
   width: 32px;
   height: 32px;
   border-radius: 50%;
+  object-fit: cover;
 }
-
+.username {
+  font-weight: 500;
+  color: #333;
+}
 .dropdown-menu {
   position: absolute;
   top: 100%;
   right: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 0.5rem 0;
-  min-width: 150px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 0.25rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
-
 .dropdown-item {
   display: block;
   padding: 0.5rem 1rem;
   color: #333;
   text-decoration: none;
+  transition: background-color 0.3s;
 }
-
-.dropdown-item:hover {
-  background: #f5f5f5;
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: #f0f0f0;
 }
-
-@media (max-width: 768px) {
-  .main-menu {
-    display: none;
-  }
-  
-  .search-container {
-    max-width: none;
-  }
+.auth-button {
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+.auth-button.login {
+  color: #0066cc;
+}
+.auth-button.signup {
+  background: #0066cc;
+  color: white;
 }
 </style>
