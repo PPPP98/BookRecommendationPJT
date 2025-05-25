@@ -11,7 +11,10 @@ urlpatterns = [
     path('check-email/', views.check_email, name='check-email'),
     path('check-nickname/', views.check_nickname, name='check-nickname'),
     
-    # 커스텀 URLs
-    # path('delete/', views.delete_user, name='user-delete'),  # 회원탈퇴
-    # path('profile/', views.user_detail, name='user-detail'),  # 프로필 조회
+    # 팔로우 관련 URLs
+    path('<int:user_id>/follow/', views.follow_toggle, name='follow-toggle'),
+    path('<int:user_id>/following/', views.following_list, name='following-list'),
+    path('<int:user_id>/followers/', views.followers_list, name='followers-list'),
+    path('<int:user_id>/profile/', views.profile_detail, name='profile-detail'),
+    path('<int:user_id>/liked-books/', views.liked_books, name='liked-books'),
 ]
