@@ -4,8 +4,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Count, Prefetch
-from django.core.cache import cache
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from .serializers import (
     ThreadCreateSerializer,
@@ -186,17 +184,7 @@ def thread_list(request):
     - 최신순 정렬
     - 페이지당 20개 로드
     - 좋아요 수, 댓글 수 포함
-    - 캐싱 적용 (1분)
     """
-    # 현재 페이지 번호 확인
-    page = request.GET.get("page", 1)
-    cache_key = f"thread_list_page_{page}"
-
-    # 캐시에서 데이터 확인
-    cached_data = cache.get(cache_key)
-    if cached_data:
-        return Response(cached_data)
-
     # DB 쿼리 최적화
     queryset = Thread.objects.select_related(
         'user', 'book'
@@ -225,7 +213,32 @@ def thread_list(request):
         "results": serializer.data,
     }
 
-    # 결과 캐싱 (1분)
-    cache.set(cache_key, response_data, 60)
-
     return Response(response_data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def popular_threads(request):
+    """
+    인기 쓰레드 조회 (좋아요 수 기준 상위 5개)
+    GET /api/threads/popular/
+    """
+    # DB 쿼리 최적화
+    queryset = Thread.objects.select_related(
+        'user', 'book'
+    ).prefetch_related(
+        Prefetch('liked_users', queryset=User.objects.only('id')),
+        Prefetch('comments', queryset=Comment.objects.only('id', 'thread_id'))
+    ).annotate(
+        like_count=Count('liked_users', distinct=True),
+        comment_count=Count('comments', distinct=True)
+    ).only(
+        'id', 'title', 'created_at',
+        'user__id', 'user__nickname', 'user__profile_image',
+        'book__id', 'book__title', 'book__cover'
+    ).order_by('-like_count')[:5]
+
+    # 직렬화
+    serializer = ThreadListSerializer(queryset, many=True)
+    
+    return Response(serializer.data)
