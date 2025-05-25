@@ -13,11 +13,21 @@
 
       <div class="book-info">
         <div class="book-label">📚 관련 도서</div>
-        <h3>{{ thread.bookTitle }}</h3>
-        <div class="rating">
-          <span>평점: </span>
-          <span class="stars">{{ '⭐'.repeat(Math.floor(thread.rating)) }}</span>
-          <span class="rating-number">{{ thread.rating }}/5</span>
+        <div class="book-detail">
+          <img
+            class="book-cover"
+            :src="thread.bookCover || fallbackBookCover"
+            :alt="thread.bookTitle"
+            @error="onBookImgError"
+          />
+          <div class="book-meta">
+            <h3>{{ thread.bookTitle }}</h3>
+            <div class="rating">
+              <span>평점: </span>
+              <span class="stars">{{ '⭐'.repeat(Math.floor(thread.rating)) }}</span>
+              <span class="rating-number">{{ thread.rating }}/5</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -90,6 +100,7 @@ export default {
   data() {
     return {
       thread: null,
+      fallbackBookCover: 'https://cdn-icons-png.flaticon.com/512/29/29302.png', // 무료 책 아이콘
       newComment: '',
       isLiked: false,
       likeLoading: false,
@@ -128,12 +139,16 @@ export default {
           likes: response.data.like_count,
           comments: response.data.comments,
           rating: response.data.rating,
-          bookTitle: response.data.book_title || '',
+          bookTitle: response.data.book_title || response.data.book?.title || '',
+          bookCover: response.data.book_cover || response.data.book?.cover || '', // cover 필드 우선 사용
         }
         this.isLiked = response.data.is_liked
       } catch (err) {
         this.$router.push('/not-found')
       }
+    },
+    onBookImgError(e) {
+      e.target.src = this.fallbackBookCover
     },
     async toggleLike() {
       if (!this.thread) return
@@ -142,7 +157,6 @@ export default {
         const response = await axios.post(`/api/threads/${this.thread.id}/like/`)
         this.isLiked = response.data.liked
         this.thread.likes = response.data.like_count
-        console.log('좋아요 응답:', response.data)
       } catch (err) {
         // 에러 처리
       } finally {
@@ -177,21 +191,18 @@ export default {
         this.error = '삭제에 실패했습니다.'
       }
     },
-    // 수정 시작
     startEdit() {
       this.editing = true
       this.editTitle = this.thread.title
       this.editContent = this.thread.content
       this.editError = null
     },
-    // 수정 취소
     cancelEdit() {
       this.editing = false
       this.editTitle = ''
       this.editContent = ''
       this.editError = null
     },
-    // 수정 저장
     async submitEdit() {
       if (!this.editTitle.trim() || !this.editContent.trim()) {
         this.editError = '제목과 내용을 모두 입력하세요.'
@@ -213,16 +224,13 @@ export default {
             }
           }
         )
-        // 성공 시 thread 정보 갱신
         this.thread.title = response.data.title
         this.thread.content = response.data.content
         this.editing = false
         this.editTitle = ''
         this.editContent = ''
-        console.log('스레드 수정 성공:', response.data)
       } catch (err) {
         this.editError = '수정에 실패했습니다.'
-        console.error('스레드 수정 실패:', err)
       } finally {
         this.editLoading = false
       }
@@ -238,7 +246,6 @@ export default {
     }
   },
   async created() {
-    // 로그인 사용자 정보 가져오기 (Pinia/Vuex 등에서)
     try {
       const authStore = useAuthStore()
       this.userId = authStore.user?.id || authStore.user?.pk || null
@@ -286,6 +293,22 @@ export default {
 .book-label {
   color: #666;
   margin-bottom: 0.5rem;
+}
+.book-detail {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.book-cover {
+  width: 80px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  background: #fff;
+}
+.book-meta {
+  flex: 1;
 }
 .rating {
   display: flex;

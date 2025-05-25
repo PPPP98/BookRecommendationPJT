@@ -129,7 +129,7 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
     delete axios.defaults.headers.common['Authorization']
-    router.push('/auth/login')
+    // router.push('/auth/login') // 주석 처리하여 리다이렉트 비활성화
   }
 
   return {
