@@ -64,3 +64,22 @@ class ThreadDetailSerializer(serializers.ModelSerializer):
 
     def get_like_count(self, obj):
         return obj.liked_users.count()
+
+
+class ThreadListSerializer(serializers.ModelSerializer):
+    user = UserSimpleSerializer(read_only=True)
+    book = BookSimpleSerializer(read_only=True)
+    like_count = serializers.IntegerField(read_only=True)
+    comment_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Thread
+        fields = [
+            "id",
+            "title",
+            "created_at",
+            "user",
+            "book",
+            "like_count",
+            "comment_count",
+        ]

@@ -15,6 +15,9 @@ class Thread(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='threads')
     book = models.ForeignKey('books.Book', on_delete=models.CASCADE, related_name='threads')
 
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self):
         return self.title
 

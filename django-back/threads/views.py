@@ -2,15 +2,28 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
+from django.db.models import Count, Prefetch
+from django.core.cache import cache
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from .serializers import (
     ThreadCreateSerializer,
     ThreadDetailSerializer,
     CommentSerializer,
+    ThreadListSerializer,
 )
 from .models import Thread, Comment
 from django.shortcuts import get_object_or_404
 from books.models import Book
-from django.db.models import Count
+
+User = get_user_model()
+
+
+class ThreadPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = "page_size"
+    max_page_size = 100
 
 
 @api_view(["POST"])
@@ -64,10 +77,10 @@ def thread_update_delete(request, pk):
 
     if request.method == "PUT":
         serializer = ThreadDetailSerializer(
-            thread, 
-            data=request.data, 
-            context={'request': request},
-            partial=True
+            thread,
+            data=request.data,
+            context={"request": request},
+            partial=True,
         )
         if serializer.is_valid():
             serializer.save()
@@ -163,3 +176,56 @@ def comment_detail(request, comment_pk):
         return Response(
             {"message": "성공적으로 삭제되었습니다."}, status=status.HTTP_204_NO_CONTENT
         )
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def thread_list(request):
+    """
+    쓰레드 전체 목록 조회
+    - 최신순 정렬
+    - 페이지당 20개 로드
+    - 좋아요 수, 댓글 수 포함
+    - 캐싱 적용 (1분)
+    """
+    # 현재 페이지 번호 확인
+    page = request.GET.get("page", 1)
+    cache_key = f"thread_list_page_{page}"
+
+    # 캐시에서 데이터 확인
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return Response(cached_data)
+
+    # DB 쿼리 최적화
+    queryset = Thread.objects.select_related(
+        'user', 'book'
+    ).prefetch_related(
+        Prefetch('liked_users', queryset=User.objects.only('id')),
+        Prefetch('comments', queryset=Comment.objects.only('id', 'thread_id'))
+    ).annotate(
+        like_count=Count('liked_users', distinct=True),
+        comment_count=Count('comments', distinct=True)
+    ).only(
+        'id', 'title', 'created_at',
+        'user__id', 'user__nickname',
+        'book__id', 'book__title', 'book__cover'
+    ).order_by('-created_at')
+
+    # 페이지네이션 적용
+    paginator = ThreadPagination()
+    paginated_threads = paginator.paginate_queryset(queryset, request)
+
+    # 직렬화
+    serializer = ThreadListSerializer(paginated_threads, many=True)
+    response_data = {
+        "count": paginator.page.paginator.count,
+        "next": paginator.get_next_link(),
+        "previous": paginator.get_previous_link(),
+        "results": serializer.data,
+    }
+
+    # 결과 캐싱 (1분)
+    cache.set(cache_key, response_data, 60)
+
+    return Response(response_data)
