@@ -29,8 +29,19 @@
         <button class="like-button" @click="toggleLike" :disabled="likeLoading">
           {{ isLiked ? '❤️' : '🤍' }} {{ thread.likes }}명이 좋아합니다
         </button>
-        <!-- 삭제 버튼 -->
+        <button v-if="isMine" @click="startEdit" class="edit-button">수정</button>
         <button v-if="isMine" @click="deleteThread" class="delete-button">삭제</button>
+      </div>
+
+      <!-- 수정 폼 -->
+      <div v-if="editing" class="edit-form">
+        <input v-model="editTitle" placeholder="제목 수정" />
+        <textarea v-model="editContent" rows="10" placeholder="내용 수정"></textarea>
+        <div class="edit-actions">
+          <button @click="submitEdit" class="submit-btn" :disabled="editLoading">저장</button>
+          <button @click="cancelEdit" class="cancel-btn">취소</button>
+        </div>
+        <div v-if="editError" class="error-state">{{ editError }}</div>
       </div>
 
       <div class="comments-section">
@@ -61,7 +72,7 @@ import axios from 'axios'
 import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
 import ErrorPage from '@/components/common/ErrorPage.vue'
-import { useAuthStore } from '@/stores/auth' // Pinia/Vuex 등에서 로그인 사용자 정보 가져오기
+import { useAuthStore } from '@/stores/auth'
 
 export default {
   name: 'ThreadDetail',
@@ -84,7 +95,13 @@ export default {
       likeLoading: false,
       commentLoading: false,
       error: null,
-      userId: null // 현재 로그인 사용자 id
+      userId: null,
+      // 수정 관련
+      editing: false,
+      editTitle: '',
+      editContent: '',
+      editLoading: false,
+      editError: null,
     }
   },
   computed: {
@@ -98,7 +115,6 @@ export default {
       }).format(date)
     },
     isMine() {
-      // 실제 로그인 사용자와 글 작성자 비교
       return this.thread && this.thread.user && this.userId === this.thread.user.id
     }
   },
@@ -112,7 +128,7 @@ export default {
           likes: response.data.like_count,
           comments: response.data.comments,
           rating: response.data.rating,
-          bookTitle: response.data.book_title || '', // 필요시
+          bookTitle: response.data.book_title || '',
         }
         this.isLiked = response.data.is_liked
       } catch (err) {
@@ -126,6 +142,7 @@ export default {
         const response = await axios.post(`/api/threads/${this.thread.id}/like/`)
         this.isLiked = response.data.liked
         this.thread.likes = response.data.like_count
+        console.log('좋아요 응답:', response.data)
       } catch (err) {
         // 에러 처리
       } finally {
@@ -151,10 +168,63 @@ export default {
     async deleteThread() {
       if (!confirm('정말 삭제하시겠습니까?')) return
       try {
-        await axios.delete(`/api/threads/${this.thread.id}/update-delete/`)
+        const token = localStorage.getItem('access_token')
+        await axios.delete(`/api/threads/${this.thread.id}/update-delete/`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
         this.$router.push('/community')
       } catch (err) {
         this.error = '삭제에 실패했습니다.'
+      }
+    },
+    // 수정 시작
+    startEdit() {
+      this.editing = true
+      this.editTitle = this.thread.title
+      this.editContent = this.thread.content
+      this.editError = null
+    },
+    // 수정 취소
+    cancelEdit() {
+      this.editing = false
+      this.editTitle = ''
+      this.editContent = ''
+      this.editError = null
+    },
+    // 수정 저장
+    async submitEdit() {
+      if (!this.editTitle.trim() || !this.editContent.trim()) {
+        this.editError = '제목과 내용을 모두 입력하세요.'
+        return
+      }
+      this.editLoading = true
+      this.editError = null
+      try {
+        const token = localStorage.getItem('access_token')
+        const response = await axios.put(
+          `/api/threads/${this.thread.id}/update-delete/`,
+          {
+            title: this.editTitle,
+            content: this.editContent,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+        // 성공 시 thread 정보 갱신
+        this.thread.title = response.data.title
+        this.thread.content = response.data.content
+        this.editing = false
+        this.editTitle = ''
+        this.editContent = ''
+        console.log('스레드 수정 성공:', response.data)
+      } catch (err) {
+        this.editError = '수정에 실패했습니다.'
+        console.error('스레드 수정 실패:', err)
+      } finally {
+        this.editLoading = false
       }
     },
     formatDate(dateStr) {
@@ -171,7 +241,7 @@ export default {
     // 로그인 사용자 정보 가져오기 (Pinia/Vuex 등에서)
     try {
       const authStore = useAuthStore()
-      this.userId = authStore.user?.id || null
+      this.userId = authStore.user?.id || authStore.user?.pk || null
     } catch (e) {
       this.userId = null
     }
@@ -241,6 +311,18 @@ export default {
   border-radius: 4px;
   cursor: pointer;
 }
+.edit-button {
+  margin-left: 1rem;
+  background-color: #ffc107;
+  color: #333;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.edit-button:hover {
+  background-color: #e0a800;
+}
 .delete-button {
   margin-left: 1rem;
   background-color: #dc3545;
@@ -248,6 +330,32 @@ export default {
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
+  cursor: pointer;
+}
+.edit-form {
+  margin: 2rem 0;
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+}
+.edit-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.submit-btn {
+  background: #0066cc;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.cancel-btn {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
   cursor: pointer;
 }
 .comments-section {
