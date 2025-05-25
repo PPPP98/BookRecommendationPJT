@@ -7,8 +7,16 @@
     - 버튼 커스터마이징
 -->
 <template>
-  <div v-if="modelValue" class="modal-overlay" @click="$emit('update:modelValue', false)">
+  <div 
+    v-if="modelValue" 
+    class="modal-overlay" 
+    @click="$emit('update:modelValue', false)"
+    role="dialog" 
+    aria-modal="true" 
+    aria-labelledby="modal-title"
+  >
     <div class="modal-content" @click.stop>
+      <button class="close-button" @click="$emit('update:modelValue', false)" aria-label="닫기">&times;</button>
       <div class="modal-body">
         <slot></slot>
       </div>
@@ -43,43 +51,42 @@ export default {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  animation: fadeIn 0.3s ease;
 }
 
 .modal-content {
   background-color: white;
   padding: 2rem;
   border-radius: 8px;
-  max-width: 90%;
-  width: 400px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  animation: slideIn 0.3s ease;
 }
 
-.modal-body {
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-}
-
-.modal-footer button {
-  padding: 0.5rem 1rem;
+.close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
   border: none;
-  border-radius: 4px;
+  font-size: 1.5rem;
   cursor: pointer;
-  font-weight: 500;
 }
 
-.modal-footer button.primary {
-  background-color: #0066cc;
-  color: white;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.modal-footer button.secondary {
-  background-color: #6c757d;
-  color: white;
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 </style>

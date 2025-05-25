@@ -1,16 +1,3 @@
-<!-- 
-  MainPage 컴포넌트
-  역할: 웹사이트의 메인 랜딩 페이지
-  기능:
-    - 추천 도서, 베스트셀러, 신작 도서 목록 표시
-    - 인기 쓰레드, 팔로우 쓰레드 표시
-    - 도서 검색 기능
-    - 카테고리 바로가기
-  데이터 구조:
-    - books: Array - 도서 목록
-    - threads: Array - 쓰레드 목록
-    - categories: Array - 카테고리 목록
--->
 <template>
   <div class="main-page">
     <Navbar />
@@ -67,12 +54,33 @@
 <script>
 import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
+import { useBooksStore } from '@/stores/books'
+import { onMounted } from 'vue'
 
 export default {
   name: 'MainPage',
   components: {
     Navbar,
     Footer,
+  },
+  setup() {
+    const booksStore = useBooksStore()
+
+    onMounted(async () => {
+      try {
+        await booksStore.fetchBooks()
+        await booksStore.fetchCategories()
+        // threadsStore.fetchThreads() 호출 제거됨
+      } catch (error) {
+        console.error('Error loading data:', error)
+      }
+    })
+
+    return {
+      books: booksStore.books,
+      categories: booksStore.categories,
+      // threads: threadsStore.threads, // 완전히 제거
+    }
   }
 }
 </script>
@@ -123,11 +131,12 @@ export default {
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .feature-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-10px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .feature-icon {
@@ -163,9 +172,31 @@ export default {
   line-height: 1.5;
 }
 
+/* 반응형 디자인 */
 @media (max-width: 768px) {
   .features-grid {
-    grid-template-columns: repeat(2, 1fr);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+    text-align: center;
+  }
+}
+
+/* 애니메이션 효과 */
+.hero-title {
+  animation: fadeIn 1s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
