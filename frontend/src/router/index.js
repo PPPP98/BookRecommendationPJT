@@ -47,6 +47,12 @@ const routes = [
     props: true
   },
   {
+    path: '/threads/:id/edit',
+    name: 'ThreadEdit',
+    component: () => import('@/views/community/ThreadEdit.vue'),
+    props: true
+  },
+  {
     path: '/threads/write/:bookId?',
     name: 'ThreadWrite',
     component: () => import('@/views/community/ThreadWrite.vue'),

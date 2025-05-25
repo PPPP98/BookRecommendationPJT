@@ -5,27 +5,29 @@
       <div class="thread-header">
         <h1>{{ thread.title }}</h1>
         <div class="author-info">
-          <img :src="thread.author.profile_image || '/default-profile.png'" :alt="thread.author.username" class="author-image">
-          <span class="author-name">{{ thread.author.nickname || thread.author.username }}</span>
+          <img :src="thread.user?.profile_image || fallbackProfile" :alt="thread.user?.username" class="author-image">
+          <span class="author-name">{{ thread.user?.nickname || thread.user?.username }}</span>
           <span class="created-at">{{ formattedDate }}</span>
         </div>
       </div>
 
       <div class="book-info">
-        <div class="book-label">📚 관련 도서</div>
+        <div class="book-title">{{ thread.book?.title }}</div>
         <div class="book-detail">
           <img
             class="book-cover"
-            :src="thread.bookCover || fallbackBookCover"
-            :alt="thread.bookTitle"
+            :src="thread.book?.cover || fallbackBookCover"
+            :alt="thread.book?.title || '책 표지'"
             @error="onBookImgError"
           />
           <div class="book-meta">
-            <h3>{{ thread.bookTitle }}</h3>
+            <div class="book-author">
+              <strong>저자:</strong> {{ thread.book?.author }}
+            </div>
             <div class="rating">
               <span>평점: </span>
-              <span class="stars">{{ '⭐'.repeat(Math.floor(thread.rating)) }}</span>
-              <span class="rating-number">{{ thread.rating }}/5</span>
+              <span class="stars">{{ '⭐'.repeat(Math.floor(thread.rating || 0)) }}</span>
+              <span class="rating-number">{{ thread.rating || 0 }}/5</span>
             </div>
           </div>
         </div>
@@ -37,7 +39,7 @@
 
       <div class="thread-actions">
         <button class="like-button" @click="toggleLike" :disabled="likeLoading">
-          {{ isLiked ? '❤️' : '🤍' }} {{ thread.likes }}명이 좋아합니다
+          {{ isLiked ? '❤️' : '🤍' }} {{ thread.like_count || 0 }}명이 좋아합니다
         </button>
         <button v-if="isMine" @click="startEdit" class="edit-button">수정</button>
         <button v-if="isMine" @click="deleteThread" class="delete-button">삭제</button>
@@ -55,15 +57,15 @@
       </div>
 
       <div class="comments-section">
-        <h2>댓글 ({{ thread.comments.length }})</h2>
+        <h2>댓글 ({{ thread.comments?.length || 0 }})</h2>
         <div class="comment-form">
           <textarea v-model="newComment" placeholder="댓글을 작성하세요"></textarea>
           <button @click="addComment" :disabled="!newComment.trim() || commentLoading">등록</button>
         </div>
         <div class="comments-list">
-          <div v-for="comment in thread.comments" :key="comment.id" class="comment">
+          <div v-for="comment in thread.comments || []" :key="comment.id" class="comment">
             <div class="comment-header">
-              <span class="comment-author">{{ comment.user.nickname || comment.user.username }}</span>
+              <span class="comment-author">{{ comment.user?.nickname || comment.user?.username }}</span>
               <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
             </div>
             <p class="comment-content">{{ comment.content }}</p>
@@ -99,8 +101,13 @@ export default {
   },
   data() {
     return {
-      thread: null,
-      fallbackBookCover: 'https://cdn-icons-png.flaticon.com/512/29/29302.png', // 무료 책 아이콘
+      thread: {
+        book: {},
+        user: {},
+        comments: []
+      },
+      fallbackBookCover: 'https://cdn-icons-png.flaticon.com/512/29/29302.png',
+      fallbackProfile: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
       newComment: '',
       isLiked: false,
       likeLoading: false,
@@ -126,7 +133,13 @@ export default {
       }).format(date)
     },
     isMine() {
-      return this.thread && this.thread.user && this.userId === this.thread.user.id
+      // userId와 thread.user.id(pk) 타입을 맞춰서 비교
+      return (
+        this.thread &&
+        this.thread.user &&
+        this.userId !== null &&
+        String(this.userId) === String(this.thread.user.id || this.thread.user.pk)
+      )
     }
   },
   methods: {
@@ -135,15 +148,13 @@ export default {
         const response = await axios.get(`/api/threads/${this.id}/`)
         this.thread = {
           ...response.data,
-          author: response.data.user,
-          likes: response.data.like_count,
-          comments: response.data.comments,
-          rating: response.data.rating,
-          bookTitle: response.data.book_title || response.data.book?.title || '',
-          bookCover: response.data.book_cover || response.data.book?.cover || '', // cover 필드 우선 사용
+          book: response.data.book || {},
+          user: response.data.user || {},
+          comments: response.data.comments || []
         }
-        this.isLiked = response.data.is_liked
+        this.isLiked = response.data.is_liked || false
       } catch (err) {
+        console.error('쓰레드 불러오기 실패:', err)
         this.$router.push('/not-found')
       }
     },
@@ -156,7 +167,7 @@ export default {
       try {
         const response = await axios.post(`/api/threads/${this.thread.id}/like/`)
         this.isLiked = response.data.liked
-        this.thread.likes = response.data.like_count
+        this.thread.like_count = response.data.like_count
       } catch (err) {
         // 에러 처리
       } finally {
@@ -248,7 +259,10 @@ export default {
   async created() {
     try {
       const authStore = useAuthStore()
-      this.userId = authStore.user?.id || authStore.user?.pk || null
+      // pk 우선, id fallback
+      this.userId = authStore.user?.pk || authStore.user?.id || null
+      // 실제 값 확인
+      // console.log('userId:', this.userId)
     } catch (e) {
       this.userId = null
     }
@@ -290,8 +304,10 @@ export default {
   border-radius: 8px;
   margin-bottom: 2rem;
 }
-.book-label {
-  color: #666;
+.book-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #333;
   margin-bottom: 0.5rem;
 }
 .book-detail {
@@ -309,6 +325,10 @@ export default {
 }
 .book-meta {
   flex: 1;
+}
+.book-author {
+  margin-bottom: 0.5rem;
+  color: #444;
 }
 .rating {
   display: flex;

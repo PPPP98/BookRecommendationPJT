@@ -1,13 +1,3 @@
-<!-- 
-  MyThreadList 컴포넌트
-  역할: 사용자가 작성한 글과 댓글 목록을 표시
-  Props:
-    - threads: Array - 작성한 글 목록
-    - comments: Array - 작성한 댓글 목록
-  이벤트:
-    - @delete-thread: 글 삭제 시 발생
-    - @delete-comment: 댓글 삭제 시 발생
--->
 <template>
   <div class="my-thread-list">
     <div class="tabs">
@@ -25,15 +15,27 @@
       </button>
     </div>
 
+    <!-- 내가 쓴 글 -->
     <div v-if="activeTab === 'threads'" class="thread-section">
       <div v-for="thread in threads" :key="thread.id" class="thread-item">
+        <img
+          v-if="thread.book && thread.book.cover"
+          :src="thread.book.cover"
+          :alt="thread.book.title"
+          class="thread-book-cover"
+          @error="onBookImgError"
+        />
         <div class="thread-content">
           <h3>{{ thread.title }}</h3>
+          <div class="thread-book-meta" v-if="thread.book">
+            <span class="book-title">{{ thread.book.title }}</span>
+            <span class="book-author">({{ thread.book.author }})</span>
+          </div>
           <p class="thread-summary">{{ threadSummary(thread.content) }}</p>
           <div class="thread-meta">
-            <span>{{ formatDate(thread.createdAt) }}</span>
-            <span>좋아요 {{ thread.likes }}</span>
-            <span>댓글 {{ thread.comments.length }}</span>
+            <span>{{ formatDate(thread.created_at) }}</span>
+            <span>좋아요 {{ thread.like_count || 0 }}</span>
+            <span>댓글 {{ thread.comments ? thread.comments.length : 0 }}</span>
           </div>
         </div>
         <div class="thread-actions">
@@ -41,12 +43,12 @@
           <button @click="deleteThread(thread.id)" class="delete-button">삭제</button>
         </div>
       </div>
-      
       <div v-if="threads.length === 0" class="empty-state">
         작성한 글이 없습니다.
       </div>
     </div>
 
+    <!-- 내가 쓴 댓글 -->
     <div v-else class="comment-section">
       <div v-for="comment in comments" :key="comment.id" class="comment-item">
         <div class="comment-content">
@@ -62,7 +64,6 @@
           <button @click="deleteComment(comment.id)" class="delete-button">삭제</button>
         </div>
       </div>
-      
       <div v-if="comments.length === 0" class="empty-state">
         작성한 댓글이 없습니다.
       </div>
@@ -85,14 +86,17 @@ export default {
   },
   data() {
     return {
-      activeTab: 'threads'
+      activeTab: 'threads',
+      fallbackBookCover: 'https://cdn-icons-png.flaticon.com/512/29/29302.png'
     }
   },
   methods: {
     threadSummary(content) {
+      if (!content) return ''
       return content.length > 100 ? content.slice(0, 100) + '...' : content
     },
     formatDate(dateString) {
+      if (!dateString) return ''
       const date = new Date(dateString)
       return new Intl.DateTimeFormat('ko-KR').format(date)
     },
@@ -111,6 +115,9 @@ export default {
     },
     navigateToThread(threadId) {
       this.$router.push(`/threads/${threadId}`)
+    },
+    onBookImgError(e) {
+      e.target.src = this.fallbackBookCover
     }
   }
 }
@@ -147,10 +154,36 @@ export default {
   align-items: flex-start;
   padding: 1rem;
   border-bottom: 1px solid #eee;
+  gap: 1rem;
+}
+
+.thread-book-cover {
+  width: 50px;
+  height: 65px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 1rem;
+  background: #fafafa;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .thread-content, .comment-content {
   flex: 1;
+}
+
+.thread-book-meta {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 0.3rem;
+}
+
+.book-title {
+  font-weight: 600;
+}
+
+.book-author {
+  margin-left: 0.5rem;
+  color: #888;
 }
 
 .thread-summary {
@@ -167,6 +200,7 @@ export default {
 
 .thread-actions, .comment-actions {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
 }
 
