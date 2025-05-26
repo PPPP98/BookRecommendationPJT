@@ -52,7 +52,7 @@
                :aria-expanded="showDropdown">
             <img
               :src="user?.profile_image || defaultProfile"
-              :alt="user?.username || '프로필'"
+              :alt="user?.nickname || '프로필'"
               class="profile-image"
               @error="onImgError"
             >
@@ -88,7 +88,8 @@ const router = useRouter()
 const searchQuery = ref('')
 const showDropdown = ref(false)
 const suggestions = ref([])
-const defaultProfile = '/default-profile.png.jpg'
+// ⭐️ CDN 기본 이미지 사용 (404 방지)
+const defaultProfile = 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
 let timer = null
 
 function onInput() {
@@ -168,10 +169,8 @@ function handleLogout() {
 }
 
 function onImgError(e) {
-  const currentSrc = e.target.src
-  const defaultProfileUrl = window.location.origin + defaultProfile
-  
-  if (currentSrc !== defaultProfileUrl) {
+  // ⭐️ 이미지 깨짐 방지: CDN 기본이미지로 대체
+  if (e.target.src !== defaultProfile) {
     e.target.src = defaultProfile
   }
 }

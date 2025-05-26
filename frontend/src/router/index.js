@@ -64,11 +64,18 @@ const routes = [
     name: 'LibraryPage',
     component: () => import('@/views/library/LibraryPage.vue')
   },
-  // 사용자 관련 라우트
+  // 내 마이페이지(내 정보)
   {
     path: '/mypage',
     name: 'MyPage',
     component: () => import('@/views/user/MyPage.vue')
+  },
+  // 👤 사용자 프로필(마이페이지) 라우트 (작성자 클릭 시 이동)
+  {
+    path: '/mypage/:id',
+    name: 'UserProfile',
+    component: () => import('@/views/user/MyPage.vue'),
+    props: true
   },
   {
     path: '/admin',

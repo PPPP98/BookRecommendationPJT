@@ -5,8 +5,19 @@
       <div class="thread-header">
         <h1>{{ thread.title }}</h1>
         <div class="author-info">
-          <img :src="thread.user?.profile_image || fallbackProfile" :alt="thread.user?.username" class="author-image">
-          <span class="author-name">{{ thread.user?.nickname || thread.user?.username }}</span>
+          <router-link
+            v-if="thread.user && thread.user.id"
+            :to="{ name: 'UserProfile', params: { id: thread.user.id } }"
+            class="author-link"
+          >
+            <img
+              :src="thread.user.profile_image || fallbackProfile"
+              :alt="thread.user.nickname || thread.user.username"
+              class="author-image"
+              @error="onProfileImgError"
+            />
+            <span class="author-name">{{ thread.user.nickname || thread.user.username }}</span>
+          </router-link>
           <span class="created-at">{{ formattedDate }}</span>
         </div>
       </div>
@@ -40,6 +51,15 @@
       <div class="thread-actions">
         <button class="like-button" @click="toggleLike" :disabled="likeLoading">
           {{ isLiked ? '❤️' : '🤍' }} {{ thread.like_count || 0 }}명이 좋아합니다
+        </button>
+        <button
+          v-if="showFollowButton"
+          class="follow-button"
+          :class="{ following: isFollowing }"
+          @click="toggleFollow"
+          :disabled="followLoading"
+        >
+          {{ isFollowing ? '언팔로우' : '팔로우' }}
         </button>
         <button v-if="isMine" @click="startEdit" class="edit-button">수정</button>
         <button v-if="isMine" @click="deleteThread" class="delete-button">삭제</button>
@@ -88,11 +108,7 @@ import { useAuthStore } from '@/stores/auth'
 
 export default {
   name: 'ThreadDetail',
-  components: {
-    Navbar,
-    Footer,
-    ErrorPage
-  },
+  components: { Navbar, Footer, ErrorPage },
   props: {
     id: {
       type: [Number, String],
@@ -114,12 +130,13 @@ export default {
       commentLoading: false,
       error: null,
       userId: null,
-      // 수정 관련
       editing: false,
       editTitle: '',
       editContent: '',
       editLoading: false,
       editError: null,
+      isFollowing: false,
+      followLoading: false,
     }
   },
   computed: {
@@ -133,12 +150,19 @@ export default {
       }).format(date)
     },
     isMine() {
-      // userId와 thread.user.id(pk) 타입을 맞춰서 비교
       return (
         this.thread &&
         this.thread.user &&
         this.userId !== null &&
         String(this.userId) === String(this.thread.user.id || this.thread.user.pk)
+      )
+    },
+    showFollowButton() {
+      return (
+        this.thread &&
+        this.thread.user &&
+        this.userId !== null &&
+        String(this.userId) !== String(this.thread.user.id || this.thread.user.pk)
       )
     }
   },
@@ -153,6 +177,7 @@ export default {
           comments: response.data.comments || []
         }
         this.isLiked = response.data.is_liked || false
+        this.isFollowing = response.data.is_following || false
       } catch (err) {
         console.error('쓰레드 불러오기 실패:', err)
         this.$router.push('/not-found')
@@ -160,6 +185,9 @@ export default {
     },
     onBookImgError(e) {
       e.target.src = this.fallbackBookCover
+    },
+    onProfileImgError(e) {
+      e.target.src = this.fallbackProfile
     },
     async toggleLike() {
       if (!this.thread) return
@@ -172,6 +200,23 @@ export default {
         // 에러 처리
       } finally {
         this.likeLoading = false
+      }
+    },
+    async toggleFollow() {
+      if (!this.thread?.user?.id) return
+      this.followLoading = true
+      try {
+        const token = localStorage.getItem('access_token')
+        const response = await axios.post(
+          `/api/accounts/${this.thread.user.id}/follow/`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        this.isFollowing = response.data.is_following
+      } catch (err) {
+        // 에러 처리
+      } finally {
+        this.followLoading = false
       }
     },
     async addComment() {
@@ -259,10 +304,7 @@ export default {
   async created() {
     try {
       const authStore = useAuthStore()
-      // pk 우선, id fallback
       this.userId = authStore.user?.pk || authStore.user?.id || null
-      // 실제 값 확인
-      // console.log('userId:', this.userId)
     } catch (e) {
       this.userId = null
     }
@@ -293,10 +335,25 @@ export default {
   color: #666;
   margin-top: 0.5rem;
 }
+.author-link {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.author-link:hover .author-name {
+  text-decoration: underline;
+  color: #1976d2;
+}
 .author-image {
   width: 32px;
   height: 32px;
   border-radius: 50%;
+  object-fit: cover;
+  background: #efefef;
 }
 .book-info {
   background: #f8f9fa;
@@ -346,6 +403,9 @@ export default {
 }
 .thread-actions {
   margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }
 .like-button {
   background: none;
@@ -354,8 +414,26 @@ export default {
   border-radius: 4px;
   cursor: pointer;
 }
+.follow-button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.18s;
+}
+.follow-button.following {
+  background: #f8f9fa;
+  color: #1976d2;
+  border: 1.5px solid #1976d2;
+}
+.follow-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .edit-button {
-  margin-left: 1rem;
   background-color: #ffc107;
   color: #333;
   border: none;
@@ -367,7 +445,6 @@ export default {
   background-color: #e0a800;
 }
 .delete-button {
-  margin-left: 1rem;
   background-color: #dc3545;
   color: white;
   border: none;
