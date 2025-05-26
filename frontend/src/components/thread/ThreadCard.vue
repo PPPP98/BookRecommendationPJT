@@ -185,4 +185,42 @@ export default {
   .book-cover-wrap { width: 38px; height: 50px; }
   .profile-img { width: 28px; height: 28px; }
 }
+@media (min-width: 1200px) {
+  .custom-thread-card {
+    max-width: 80vw;
+    padding: 2rem;
+  }
+}
+@media (max-width: 768px) {
+  .custom-thread-card {
+    max-width: 95vw;
+    min-width: 95vw;
+    padding: 1rem;
+  }
+  .card-main {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .book-cover-wrap {
+    width: 50px;
+    height: 70px;
+  }
+  .profile-img {
+    width: 30px;
+    height: 30px;
+  }
+}
+@media (max-width: 480px) {
+  .custom-thread-card {
+    max-width: 100vw;
+    min-width: 100vw;
+    padding: 0.8rem;
+  }
+  .thread-title {
+    font-size: 1rem;
+  }
+  .book-title {
+    font-size: 0.9rem;
+  }
+}
 </style>

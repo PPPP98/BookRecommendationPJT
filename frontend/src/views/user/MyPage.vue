@@ -766,6 +766,24 @@ export default {
   color: #dc3545;
   padding: 1rem 0;
 }
+@media (max-width: 1200px) {
+  .main-content {
+    padding: 1.5rem;
+  }
+  .profile-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .profile-card-img {
+    width: 80px;
+    height: 80px;
+  }
+  .profile-card-meta {
+    justify-content: center;
+  }
+}
+
 @media (max-width: 900px) {
   .profile-summary-row {
     flex-direction: column;
@@ -778,19 +796,34 @@ export default {
   .modal-list.liked-books-modal-list {
     max-width: 98vw;
   }
-  .custom-card-grid {
-    grid-template-columns: repeat(2, minmax(120px, 1fr));
-  }
 }
 @media (max-width: 768px) {
   .main-content {
     padding: 1rem;
   }
-  .books-container.small.horizontal-scroll {
-    gap: 0.5rem;
+  .profile-summary-row {
+    flex-direction: column;
+    gap: 1rem;
   }
   .custom-card-grid {
     grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .profile-card-img {
+    width: 60px;
+    height: 60px;
+  }
+  .profile-card-nickname {
+    font-size: 1.2rem;
+  }
+  .profile-card-meta {
+    font-size: 0.9rem;
+  }
+  .custom-card {
+    min-width: 100px;
+    max-width: 120px;
+    height: 180px;
   }
 }
 </style>

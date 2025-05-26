@@ -173,16 +173,32 @@ export default {
 }
 
 /* 반응형 디자인 */
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
+  .main-content {
+    padding: 1.5rem;
+  }
   .features-grid {
-    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 1.8rem;
+  }
+  .features-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
+}
 
+@media (max-width: 480px) {
   .hero-title {
-    font-size: 2rem;
-    text-align: center;
+    font-size: 1.5rem;
+  }
+  .feature-card {
+    padding: 1rem;
   }
 }
 
@@ -197,12 +213,6 @@ export default {
   }
   to {
     opacity: 1;
-  }
-}
-
-@media (max-width: 480px) {
-  .features-grid {
-    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -253,11 +253,6 @@ export default {
 </script>
 
 <style scoped>
-/* ...기존 스타일 그대로... */
-</style>
-
-
-<style scoped>
 .book-list-page {
   min-height: 100vh;
   display: flex;
@@ -428,34 +423,39 @@ export default {
 }
 
 @media (max-width: 1200px) {
-  .books-grid {
-    grid-template-columns: repeat(4, 1fr);
+  .main-content {
+    padding: 1.5rem;
   }
-}
-
-@media (max-width: 992px) {
   .books-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
   }
 }
 
 @media (max-width: 768px) {
+  .profile-section {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .profile-image {
+    width: 80px;
+    height: 80px;
+  }
   .books-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
   }
 }
 
 @media (max-width: 480px) {
+  .profile-image {
+    width: 60px;
+    height: 60px;
+  }
   .books-grid {
     grid-template-columns: 1fr;
-  }
-  .filter-section {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .filter-select {
-    max-width: none;
-    width: 100%;
+    gap: 0.5rem;
   }
 }
 </style>

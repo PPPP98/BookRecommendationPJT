@@ -259,11 +259,34 @@ h1 {
   text-align: center;
   margin-top: 1rem;
 }
-@media (max-width: 600px) {
+@media (max-width: 1200px) {
   .login-container {
-    max-width: 98vw;
+    max-width: 600px;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-container {
     padding: 1rem;
-    margin-top: 1rem;
+  }
+  .form-input {
+    font-size: 0.9rem;
+  }
+  .login-button {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 0.5rem;
+  }
+  .form-input {
+    font-size: 0.8rem;
+  }
+  .login-button {
+    font-size: 0.9rem;
   }
 }
 </style>
