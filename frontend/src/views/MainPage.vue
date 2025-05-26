@@ -9,7 +9,7 @@
       <div
         class="banner-section-fullscreen"
         ref="swiperBannerRef"
-        @wheel.passive="onBannerWheel"
+        @wheel="onBannerWheel"
         @touchstart.passive="onTouchStart"
         @touchmove.passive="onTouchMove"
       >
@@ -49,14 +49,12 @@
         </section>
       </div>
     </main>
-    <Footer />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Navbar from '@/components/common/Navbar.vue'
-import Footer from '@/components/common/Footer.vue'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { Pagination, Autoplay } from 'swiper/modules'
 import 'swiper/css'
@@ -152,26 +150,22 @@ function scrollToFeatures() {
   flex-direction: column;
   background-color: #f8f9fa;
 }
-
 .main-content {
   flex: 1;
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
 }
-
 .hero-section {
   text-align: left;
   padding: 2rem 0;
 }
-
 .hero-title {
   font-size: 2.5rem;
   font-weight: 700;
   color: #333;
   line-height: 1.3;
 }
-
 /* Swiper 전체화면 배너 */
 .banner-section-fullscreen {
   width: 100vw;
@@ -214,20 +208,23 @@ function scrollToFeatures() {
   }
 }
 
-/* ===== 데스크톱 맞춤 90vh 카드 섹션 ===== */
+/* ===== 카드 전체화면(가로세로) ===== */
 .features-fullscreen {
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
   scroll-snap-type: y mandatory;
-  height: 90vh;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
+  overflow-y: auto;
+  height: 100vh;
+  background: #f8f9fa;
 }
 .feature-card-fullscreen {
-  width: 100%;
-  height: 90vh;
-  max-width: 100%;
-  margin: 0 auto;
-  background: white;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  background: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -235,6 +232,7 @@ function scrollToFeatures() {
   scroll-snap-align: start;
   opacity: 0;
   transition: opacity 1s;
+  box-shadow: 0 0 32px 0 rgba(0,0,0,0.03);
 }
 .opacity-100 {
   opacity: 1 !important;
@@ -259,17 +257,16 @@ function scrollToFeatures() {
   width: 80px;
   height: 80px;
   margin-bottom: 2.2rem;
+  background-color: #e9ecef;
+  display: block;
 }
 .feature-icon.square {
-  background-color: #e9ecef;
   border-radius: 16px;
 }
 .feature-icon.circle {
-  background-color: #e9ecef;
   border-radius: 50%;
 }
 .feature-icon.triangle {
-  background-color: #e9ecef;
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 @media (max-width: 900px) {
