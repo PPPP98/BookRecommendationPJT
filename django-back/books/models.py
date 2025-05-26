@@ -26,6 +26,9 @@ class Book(models.Model):
     category = models.ForeignKey(
         Category, on_delete=models.PROTECT, related_name="books"
     )  # 카테고리
+    # 임베딩 벡터 (OpenAI text-embedding-3-small 모델은 1536 차원)
+    embedding_vector = models.TextField(null=True, blank=True)
+    embedding_updated_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         indexes = [
