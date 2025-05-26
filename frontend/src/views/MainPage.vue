@@ -1,86 +1,146 @@
 <template>
   <div class="main-page">
     <Navbar />
-    
     <main class="main-content">
       <div class="hero-section">
         <h1 class="hero-title">AI와 함께하는<br>새로운 도서 탐색</h1>
       </div>
-
-      <div class="banner-section">
-        <div class="banner-content">
-          <!-- 메인 배너 내용 -->
-        </div>
+      <!-- Swiper 배너 (전체화면) -->
+      <div
+        class="banner-section-fullscreen"
+        ref="swiperBannerRef"
+        @wheel.passive="onBannerWheel"
+        @touchstart.passive="onTouchStart"
+        @touchmove.passive="onTouchMove"
+      >
+        <Swiper
+          :modules="[Pagination, Autoplay]"
+          :pagination="{ clickable: true }"
+          :autoplay="{ delay: 3500, disableOnInteraction: false }"
+          loop
+        >
+          <SwiperSlide v-for="(banner, idx) in banners" :key="idx">
+            <div class="banner-content-fullscreen">
+              <img v-if="banner.img" :src="banner.img" alt="" class="h-40 w-40 md:h-60 md:w-60 mb-8 rounded-2xl object-cover shadow-xl" />
+              <div class="text-center">
+                <div class="text-3xl md:text-5xl font-extrabold mb-4">{{ banner.title }}</div>
+                <div class="text-lg md:text-2xl text-gray-600">{{ banner.desc }}</div>
+              </div>
+            </div>
+          </SwiperSlide>
+        </Swiper>
       </div>
-
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon square"></div>
-          <h3>AI 추천도서</h3>
-          <p>개인 맞춤형 도서 추천을 제공합니다</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon circle"></div>
-          <h3>베스트셀러 Top10</h3>
-          <p>가장 인기있는 도서를 확인하세요</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon triangle"></div>
-          <h3>도서 큐레이션</h3>
-          <p>관심사별 엄선된 도서 컬렉션</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon square"></div>
-          <h3>독서 커뮤니티</h3>
-          <p>다른 독자들과 의견을 나누세요</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon circle"></div>
-          <h3>근처 도서관</h3>
-          <p>가까운 도서관을 찾아보세요</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon triangle"></div>
-          <h3>도서 리뷰</h3>
-          <p>상세한 도서 리뷰를 확인하세요</p>
-        </div>
+      <!-- 카드 섹션 -->
+      <div class="features-fullscreen" ref="featuresRef">
+        <section
+          v-for="(feature, idx) in features"
+          :key="idx"
+          :id="feature.id"
+          ref="featureRefs"
+          :class="[
+            'feature-card-fullscreen',
+            isVisible[idx] ? 'opacity-100' : 'opacity-0',
+            'transition-opacity duration-1000'
+          ]"
+        >
+          <div :class="['feature-icon', feature.iconClass]"></div>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.desc }}</p>
+        </section>
       </div>
     </main>
-
     <Footer />
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
-import { useBooksStore } from '@/stores/books'
-import { onMounted } from 'vue'
+import { Swiper, SwiperSlide } from 'swiper/vue'
+import { Pagination, Autoplay } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/pagination'
 
-export default {
-  name: 'MainPage',
-  components: {
-    Navbar,
-    Footer,
+const banners = [
+  {
+    title: '신규 회원 AI 추천 큐레이션 오픈!',
+    desc: '가입만 해도 나만의 책 추천이 바로 시작됩니다.',
+    img: 'https://bookshelf-snowy.vercel.app/_next/static/media/hero-bookshelf.6e7f1c2f.svg'
   },
-  setup() {
-    const booksStore = useBooksStore()
+  {
+    title: '베스트셀러 업데이트',
+    desc: '실시간 인기 도서를 한눈에!',
+    img: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=200&q=80'
+  },
+  {
+    title: '커뮤니티에서 독서 친구를 만나보세요',
+    desc: '책을 좋아하는 사람들과 소통하고 공유하세요.',
+    img: 'https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?auto=format&fit=crop&w=200&q=80'
+  }
+]
 
-    onMounted(async () => {
-      try {
-        await booksStore.fetchBooks()
-        await booksStore.fetchCategories()
-        // threadsStore.fetchThreads() 호출 제거됨
-      } catch (error) {
-        console.error('Error loading data:', error)
-      }
-    })
+const features = [
+  { id: 'feature-ai', iconClass: 'square', title: 'AI 추천도서', desc: '개인 맞춤형 도서 추천을 제공합니다' },
+  { id: 'feature-best', iconClass: 'circle', title: '베스트셀러 Top10', desc: '가장 인기있는 도서를 확인하세요' },
+  { id: 'feature-curation', iconClass: 'triangle', title: '도서 큐레이션', desc: '관심사별 엄선된 도서 컬렉션' },
+  { id: 'feature-community', iconClass: 'square', title: '독서 커뮤니티', desc: '다른 독자들과 의견을 나누세요' },
+  { id: 'feature-library', iconClass: 'circle', title: '근처 도서관', desc: '가까운 도서관을 찾아보세요' },
+  { id: 'feature-thread', iconClass: 'triangle', title: '인기 쓰레드', desc: '상세한 도서 리뷰를 확인하세요' },
+]
 
-    return {
-      books: booksStore.books,
-      categories: booksStore.categories,
-      // threads: threadsStore.threads, // 완전히 제거
+// Intersection Observer
+const featureRefs = ref([])
+const isVisible = ref(features.map(() => false))
+let observer
+
+onMounted(() => {
+  observer = new window.IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const idx = featureRefs.value.findIndex((el) => el === entry.target)
+        if (idx !== -1) {
+          isVisible.value[idx] = entry.isIntersecting
+        }
+      })
+    },
+    { threshold: 0.4 }
+  )
+  featureRefs.value.forEach((el) => el && observer.observe(el))
+})
+
+onBeforeUnmount(() => {
+  if (observer) observer.disconnect()
+})
+
+// --- 스와이프 배너에서 아래로 스크롤 시 자동 이동 기능 ---
+const swiperBannerRef = ref(null)
+const featuresRef = ref(null)
+let touchStartY = 0
+
+function onBannerWheel(e) {
+  if (e.deltaY > 0) {
+    e.preventDefault()
+    scrollToFeatures()
+  }
+}
+function onTouchStart(e) {
+  if (e.touches && e.touches.length === 1) {
+    touchStartY = e.touches[0].clientY
+  }
+}
+function onTouchMove(e) {
+  if (e.touches && e.touches.length === 1) {
+    const moveY = e.touches[0].clientY
+    if (touchStartY && moveY - touchStartY < -30) { // 아래로 스와이프
+      scrollToFeatures()
+      touchStartY = 0 // 한 번만 동작
     }
+  }
+}
+function scrollToFeatures() {
+  if (featuresRef.value) {
+    featuresRef.value.scrollIntoView({ behavior: 'smooth' })
   }
 }
 </script>
@@ -112,107 +172,114 @@ export default {
   line-height: 1.3;
 }
 
-.banner-section {
-  background-color: #f1f3f5;
-  border-radius: 12px;
-  height: 300px;
-  margin: 2rem 0;
+/* Swiper 전체화면 배너 */
+.banner-section-fullscreen {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  background: #f1f3f5;
+  border-radius: 0;
+  margin-bottom: 3rem;
+  z-index: 1;
 }
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-  margin-top: 3rem;
+.swiper, .swiper-container {
+  width: 100vw !important;
+  height: 100vh !important;
 }
-
-.feature-card {
-  background: white;
-  border-radius: 12px;
+.swiper-slide {
+  width: 100vw !important;
+  height: 100vh !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.banner-content-fullscreen {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
   padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box;
 }
-
-.feature-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.feature-icon {
-  width: 60px;
-  height: 60px;
-  margin-bottom: 1.5rem;
-}
-
-.feature-icon.square {
-  background-color: #e9ecef;
-}
-
-.feature-icon.circle {
-  background-color: #e9ecef;
-  border-radius: 50%;
-}
-
-.feature-icon.triangle {
-  background-color: #e9ecef;
-  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-}
-
-.feature-card h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #333;
-}
-
-.feature-card p {
-  color: #666;
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 1200px) {
-  .main-content {
-    padding: 1.5rem;
-  }
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-}
-
 @media (max-width: 768px) {
-  .hero-title {
-    font-size: 1.8rem;
-  }
-  .features-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-title {
-    font-size: 1.5rem;
-  }
-  .feature-card {
+  .banner-content-fullscreen {
     padding: 1rem;
   }
 }
 
-/* 애니메이션 효과 */
-.hero-title {
-  animation: fadeIn 1s ease;
+/* ===== 데스크톱 맞춤 90vh 카드 섹션 ===== */
+.features-fullscreen {
+  scroll-snap-type: y mandatory;
+  height: 90vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.feature-card-fullscreen {
+  width: 100%;
+  height: 90vh;
+  max-width: 100%;
+  margin: 0 auto;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: start;
+  opacity: 0;
+  transition: opacity 1s;
+}
+.opacity-100 {
+  opacity: 1 !important;
+}
+.opacity-0 {
+  opacity: 0 !important;
+}
+.feature-card-fullscreen h3 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  color: #23243a;
+}
+.feature-card-fullscreen p {
+  color: #666;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  text-align: center;
+  max-width: 400px;
+}
+.feature-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 2.2rem;
+}
+.feature-icon.square {
+  background-color: #e9ecef;
+  border-radius: 16px;
+}
+.feature-icon.circle {
+  background-color: #e9ecef;
+  border-radius: 50%;
+}
+.feature-icon.triangle {
+  background-color: #e9ecef;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+@media (max-width: 900px) {
+  .feature-card-fullscreen h3 { font-size: 1.4rem; }
+  .feature-card-fullscreen p { font-size: 1rem; }
+  .feature-icon { width: 56px; height: 56px; }
+}
+@media (max-width: 600px) {
+  .feature-card-fullscreen { padding: 1.5rem; }
+  .feature-card-fullscreen h3 { font-size: 1.1rem; }
+  .feature-icon { width: 40px; height: 40px; }
 }
 </style>

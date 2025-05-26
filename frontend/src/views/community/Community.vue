@@ -1,5 +1,5 @@
 <template>
-  <div class="thread-list-page">
+  <div class="community-pinterest">
     <Navbar />
 
     <main class="main-content">
@@ -7,60 +7,53 @@
         <h1>커뮤니티</h1>
       </div>
 
-      <div class="thread-container wide">
-        <div class="divider"></div>
+      <!-- 상단 3개 카드 -->
+      <section class="top-ideas">
+        <PinterestCard
+          v-if="popularThreads.length"
+          :thread="popularThreads[currentPopularIndex]"
+          label="인기 쓰레드"
+        />
+        <PinterestCard
+          v-if="followingThreads.length"
+          :thread="followingThreads[0]"
+          label="팔로잉 쓰레드"
+        />
+        <PinterestCard
+          :thread="{
+            book: { cover: 'https://source.unsplash.com/220x300/?community,idea' },
+            title: '임시 카드',
+            user: { nickname: '임시' },
+            like_count: 0,
+            comment_count: 0
+          }"
+          label="임시 쓰레드"
+        />
+      </section>
 
-        <!-- 인기 쓰레드 슬라이드 -->
-        <div v-if="popularThreads.length > 0" class="popular-thread-slide-section">
-          <h2>🔥 인기 쓰레드</h2>
-          <div class="popular-thread-slide"
-               @mouseenter="showSlideButtons = true"
-               @mouseleave="showSlideButtons = false">
-            <ThreadCard
-              v-if="popularThreads[currentPopularIndex]"
-              :thread="popularThreads[currentPopularIndex]"
-              :large="true"
-              @thread-click="goToThread"
-            />
-            <button
-              v-if="showSlideButtons"
-              class="slide-btn prev"
-              @click="prevPopularThread"
-              aria-label="이전 인기 쓰레드"
-            >&lt;</button>
-            <button
-              v-if="showSlideButtons"
-              class="slide-btn next"
-              @click="nextPopularThread"
-              aria-label="다음 인기 쓰레드"
-            >&gt;</button>
-          </div>
-        </div>
+      <div class="divider"></div>
 
-        <div class="divider"></div>
-
-        <!-- 전체 쓰레드 목록 (세로 나열) -->
+      <!-- 전체 쓰레드 Masonry -->
+      <section class="masonry-section">
+        <h2 class="masonry-title">새로운 소식</h2>
         <div v-if="loading" class="info-state">불러오는 중...</div>
         <div v-else-if="error" class="error-state">{{ error }}</div>
         <div v-else>
           <div v-if="threads.length === 0" class="info-state">게시글이 없습니다.</div>
-          <div v-else>
-            <div class="all-threads-list">
-              <ThreadCard
-                v-for="thread in threads"
-                :key="thread.id"
-                :thread="thread"
-                :large="true"
-                @thread-click="goToThread"
-              />
-            </div>
-            <div class="pagination">
-              <button v-if="prev" @click="goToPage(prev)">이전</button>
-              <button v-if="next" @click="goToPage(next)">다음</button>
-            </div>
+          <div v-else class="masonry-grid">
+            <PinterestCard
+              v-for="thread in threads"
+              :key="thread.id"
+              :thread="thread"
+              @click.native="goToThread(thread.id)"
+            />
+          </div>
+          <div class="pagination">
+            <button v-if="prev" @click="goToPage(prev)">이전</button>
+            <button v-if="next" @click="goToPage(next)">다음</button>
           </div>
         </div>
-      </div>
+      </section>
     </main>
 
     <Footer />
@@ -70,11 +63,10 @@
 <script>
 import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
-import ThreadCard from '@/components/thread/ThreadCard.vue'
 import axios from 'axios'
+import { h } from 'vue'
 
 function toRelativeUrl(url) {
-  // 절대 URL이면 /api/threads/... 부분만 추출
   if (!url) return null
   try {
     const u = new URL(url)
@@ -84,9 +76,50 @@ function toRelativeUrl(url) {
   }
 }
 
+// 커스텀 카드 컴포넌트 (렌더 함수)
+const PinterestCard = {
+  name: 'PinterestCard',
+  props: {
+    thread: { type: Object, required: true },
+    label: { type: String, default: '' }
+  },
+  render() {
+    const cover =
+      this.thread.book && this.thread.book.cover
+        ? this.thread.book.cover
+        : (this.thread.image || 'https://source.unsplash.com/220x300/?book,community')
+    const title = this.thread.title || ''
+    const nickname =
+      (this.thread.user && (this.thread.user.nickname || this.thread.user.username)) || '작성자 미상'
+    const likeCount = this.thread.like_count || 0
+    const commentCount = this.thread.comment_count || 0
+
+    return h(
+      'div',
+      { class: 'custom-card', onClick: this.$attrs.onClick },
+      [
+        this.label
+          ? h('div', { class: 'custom-label' }, this.label)
+          : null,
+        h('img', {
+          class: 'custom-img',
+          src: cover,
+          alt: title
+        }),
+        h('div', { class: 'custom-title' }, title),
+        h('div', { class: 'custom-meta' }, nickname),
+        h('div', { class: 'custom-meta-counts' }, [
+          h('span', { class: 'like' }, `❤️ ${likeCount}`),
+          h('span', { class: 'comment' }, `💬 ${commentCount}`)
+        ])
+      ]
+    )
+  }
+}
+
 export default {
-  name: 'Community',
-  components: { Navbar, Footer, ThreadCard },
+  name: 'CommunityPinterest',
+  components: { Navbar, Footer, PinterestCard },
   data() {
     return {
       threads: [],
@@ -98,16 +131,17 @@ export default {
       itemsPerPage: 20,
       popularThreads: [],
       currentPopularIndex: 0,
-      showSlideButtons: false,
-      slideInterval: null
+      slideInterval: null,
+      followingThreads: []
     }
   },
   mounted() {
     this.fetchPopularThreads()
     this.fetchThreads()
+    this.fetchFollowingThreads()
     this.startSlideInterval()
   },
-  beforeDestroy() {
+  beforeUnmount() {
     this.clearSlideInterval()
   },
   methods: {
@@ -124,7 +158,6 @@ export default {
       }
       try {
         const { data } = await axios.get(apiUrl)
-        // 명세에 따라 항상 results 배열 사용
         this.threads = Array.isArray(data.results) ? data.results : []
         this.next = data.next
         this.prev = data.previous
@@ -150,20 +183,20 @@ export default {
         this.popularThreads = []
       }
     },
+    async fetchFollowingThreads() {
+      try {
+        const { data } = await axios.get('/api/threads/following/?limit=5')
+        this.followingThreads = Array.isArray(data)
+          ? data.slice(0, 5)
+          : Array.isArray(data.results)
+          ? data.results.slice(0, 5)
+          : []
+      } catch {
+        this.followingThreads = []
+      }
+    },
     goToThread(threadId) {
       this.$router.push({ name: 'ThreadDetail', params: { id: threadId } })
-    },
-    prevPopularThread() {
-      if (!this.popularThreads.length) return
-      this.currentPopularIndex =
-        (this.currentPopularIndex - 1 + this.popularThreads.length) % this.popularThreads.length
-      this.restartSlideInterval()
-    },
-    nextPopularThread() {
-      if (!this.popularThreads.length) return
-      this.currentPopularIndex =
-        (this.currentPopularIndex + 1) % this.popularThreads.length
-      this.restartSlideInterval()
     },
     startSlideInterval() {
       this.clearSlideInterval()
@@ -177,10 +210,6 @@ export default {
     clearSlideInterval() {
       if (this.slideInterval) clearInterval(this.slideInterval)
     },
-    restartSlideInterval() {
-      this.clearSlideInterval()
-      this.startSlideInterval()
-    },
     goToPage(url) {
       this.fetchThreads(url)
     }
@@ -189,16 +218,16 @@ export default {
 </script>
 
 <style scoped>
-.thread-list-page {
+.community-pinterest {
+  background: #faf8f6;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  width: 100vw;
+  overflow-x: hidden;
 }
 .main-content {
-  flex: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2.5rem 2vw 2rem 2vw;
 }
 .page-header {
   display: flex;
@@ -206,83 +235,138 @@ export default {
   align-items: center;
   margin-bottom: 2rem;
 }
-.thread-container.wide {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
-  padding: 2rem 2rem 2.5rem 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
 .divider {
   border-bottom: 1.5px solid #e0e0e0;
   margin: 1.5rem 0 1.7rem 0;
 }
-.popular-thread-slide-section {
-  margin-bottom: 2.5rem;
-}
-.popular-thread-slide-section h2 {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin-bottom: 0.8rem;
-  color: #1976d2;
-}
-.popular-thread-slide {
-  position: relative;
+
+/* 상단 3개 카드 */
+.top-ideas {
   display: flex;
+  gap: 1.5rem;
   justify-content: center;
-  align-items: center;
-  min-height: 200px;
-  margin-bottom: 1.2rem;
-}
-.popular-thread-slide .thread-card.large {
-  min-width: 720px;
-  max-width: 900px;
+  margin: 2.5rem 0 2.2rem 0;
+  flex-wrap: wrap;
   width: 100%;
-  margin: 0 auto;
 }
-.slide-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+
+/* 커스텀 카드 스타일 (Pinterest 스타일 Masonry) */
+.custom-card {
   background: #fff;
-  border: 1.5px solid #1976d2;
-  color: #1976d2;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-size: 1.4rem;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 2;
-  opacity: 0.85;
-  transition: background 0.2s, color 0.2s;
-}
-.slide-btn:hover {
-  background: #1976d2;
-  color: #fff;
-}
-.slide-btn.prev {
-  left: 0;
-}
-.slide-btn.next {
-  right: 0;
-}
-.all-threads-list {
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  width: 210px;
+  max-width: 100%;
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.11s;
+  break-inside: avoid;
+  position: relative;
 }
-.all-threads-list .thread-card.large {
-  min-width: 720px;
-  max-width: 900px;
-  margin: 0 auto 1.5rem auto;
+.custom-card:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  transform: translateY(-4px) scale(1.03);
+}
+.custom-label {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  background: #e60023;
+  color: #fff;
+  font-size: 0.93rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 0.23em 0.9em;
+  z-index: 2;
+  opacity: 0.93;
+}
+.custom-img {
+  width: 100%;
+  height: 145px;
+  max-width: 100%;
+  object-fit: cover;
+  background: #f8f8f8;
+  display: block;
+}
+.custom-title {
+  font-size: 1.01rem;
+  font-weight: 600;
+  margin: 0.7rem 0 0.15rem 0;
+  padding: 0 0.6rem;
+  text-align: left;
+}
+.custom-meta {
+  font-size: 0.92rem;
+  color: #888;
+  margin-bottom: 0.2rem;
+  padding: 0 0.6rem;
+  text-align: left;
+}
+.custom-meta-counts {
+  font-size: 0.89rem;
+  color: #b70d1f;
+  padding: 0 0.6rem 0.7rem 0.6rem;
+  display: flex;
+  gap: 1.1em;
+}
+.custom-meta-counts .like { color: #e60023; }
+.custom-meta-counts .comment { color: #1976d2; }
+
+/* Masonry 전체 쓰레드 */
+.masonry-section {
+  width: 100%;
+  margin: 0 auto;
+  background: #faf8f6;
+  padding-bottom: 3rem;
+}
+.masonry-title {
+  font-size: 1.22rem;
+  font-weight: 700;
+  margin: 2.5rem 0 1.5rem 0.5vw;
+  text-align: left;
+  color: #222;
+}
+.masonry-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  column-count: 5;
+  column-gap: 1.2rem;
+  padding: 0 1vw;
+}
+.masonry-grid .custom-card {
+  display: inline-block;
+  width: 210px;
+  max-width: 100%;
+  margin: 0 0 1.2rem 0;
+}
+
+/* 반응형 */
+@media (max-width: 1200px) {
+  .main-content, .masonry-grid { max-width: 98vw; }
+  .masonry-grid { column-count: 4; }
+}
+@media (max-width: 900px) {
+  .main-content { padding: 1.2rem 0.5vw 1.2rem 0.5vw; }
+  .masonry-grid { column-count: 3; }
+}
+@media (max-width: 700px) {
+  .masonry-grid { column-count: 2; }
+  .custom-card, .masonry-grid .custom-card { width: 95vw; max-width: 95vw; }
+  .custom-img { height: 38vw; min-height: 120px; max-height: 180px; }
+}
+@media (max-width: 500px) {
+  .masonry-grid { column-count: 1; }
+  .custom-card, .masonry-grid .custom-card { width: 98vw; max-width: 98vw; }
+  .custom-img { height: 46vw; min-height: 110px; max-height: 170px; }
 }
 .info-state, .error-state {
   text-align: center;
   padding: 2rem;
   color: #666;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 .error-state { color: #dc3545; }
 .pagination {
@@ -290,27 +374,5 @@ export default {
   gap: 1rem;
   justify-content: center;
   margin: 2rem 0;
-}
-@media (max-width: 1200px) {
-  .thread-container.wide {
-    max-width: 98vw;
-    padding: 1rem 0.5rem 1.5rem 0.5rem;
-  }
-  .popular-thread-slide .thread-card.large,
-  .all-threads-list .thread-card.large {
-    min-width: 98vw;
-    max-width: 98vw;
-  }
-}
-@media (max-width: 600px) {
-  .main-content { padding: 0.5rem; }
-  .thread-container.wide { padding: 0.5rem 0.1rem 1rem 0.1rem; }
-  .popular-thread-slide .thread-card.large,
-  .all-threads-list .thread-card.large {
-    min-width: 100vw;
-    max-width: 100vw;
-    border-radius: 0;
-    padding: 0.8rem 0.4rem;
-  }
 }
 </style>
