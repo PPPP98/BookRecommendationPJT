@@ -4,6 +4,7 @@ from django.db.models.functions import Lower
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
@@ -112,6 +113,17 @@ def book_like(request, pk):
 
     # count()만 호출하여 쿼리 최적화
     like_count = book.liked_users.count()
+
+    # 사용자의 임베딩 업데이트 시도
+    from accounts.embedding_utils import update_user_embedding
+    try:
+        # 최근 업데이트가 없는 경우에만 업데이트
+        if not user.embedding_updated_at or (timezone.now() - user.embedding_updated_at).seconds > 5:
+            update_user_embedding(user)
+    except Exception as e:
+        print(f"사용자 임베딩 업데이트 중 오류 발생: {str(e)}")
+        # 임베딩 업데이트 실패는 좋아요 기능에 영향을 주지 않음
+        pass
 
     return Response(
         {"liked": liked, "like_count": like_count}, status=status.HTTP_200_OK
