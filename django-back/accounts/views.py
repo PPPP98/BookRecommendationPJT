@@ -174,22 +174,10 @@ def profile_detail(request, user_id):
     - 팔로워/팔로잉 수
     - 최근 좋아요한 책 5개
     - 최근 팔로우한 사용자 5명
-    """
-    # 프로필 정보 조회 및 최적화
+    """    # 프로필 정보 조회 및 최적화
     user = User.objects.annotate(
         follower_count=Count('followers', distinct=True),
         following_count=Count('following', distinct=True)
-    ).prefetch_related(
-        Prefetch(
-            'like_books',
-            queryset=Book.objects.only('id', 'title', 'author', 'cover').order_by('-id')[:5],
-            to_attr='recent_liked_books'
-        ),
-        Prefetch(
-            'following',
-            queryset=User.objects.only('id', 'nickname', 'profile_image').order_by('-id')[:5],
-            to_attr='recent_following'
-        )
     ).get(id=user_id)
 
     serializer = UserProfileSerializer(
@@ -235,23 +223,12 @@ def profile(request):
     """
     user = request.user
 
-    if request.method == 'GET':
-        # 팔로워/팔로잉 수 계산
+    if request.method == 'GET':        # 팔로워/팔로잉 수 계산
         user = User.objects.annotate(
             follower_count=Count('followers', distinct=True),
             following_count=Count('following', distinct=True)
         ).prefetch_related(
-            'interested_categories',
-            Prefetch(
-                'like_books',
-                queryset=Book.objects.all()[:5],
-                to_attr='recent_liked_books'
-            ),
-            Prefetch(
-                'following',
-                queryset=User.objects.all()[:5],
-                to_attr='recent_following'
-            )
+            'interested_categories'
         ).get(id=user.id)
 
         serializer = UserProfileSerializer(user, context={'request': request})

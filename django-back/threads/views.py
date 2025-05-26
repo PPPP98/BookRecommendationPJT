@@ -51,7 +51,16 @@ def thread_create(requset, book_pk):
 def thread_detail(request, pk):
     """스레드 상세 조회"""
     try:
-        thread = Thread.objects.prefetch_related("comments").get(pk=pk)
+        thread = (
+            Thread.objects
+            .select_related("user", "book")
+            .prefetch_related(
+                "comments", 
+                "comments__user",
+                "user__followers"
+            )
+            .get(pk=pk)
+        )
     except Thread.DoesNotExist:
         return Response(
             {"error": "스레드를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND

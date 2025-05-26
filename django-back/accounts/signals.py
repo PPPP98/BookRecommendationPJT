@@ -12,13 +12,7 @@ def update_user_embedding_on_categories_change(sender, instance, action, **kwarg
         if not instance.embedding_updated_at or (timezone.now() - instance.embedding_updated_at).seconds > 5:
             update_user_embedding(instance)
 
-@receiver(m2m_changed, sender=User.like_books.through)
-def update_user_embedding_on_likes_change(sender, instance, action, **kwargs):
-    """좋아요한 책이 변경될 때 사용자 임베딩 업데이트"""
-    if action in ["post_add", "post_remove", "post_clear"]:
-        # 최근에 임베딩이 업데이트되지 않은 경우에만 실행
-        if not instance.embedding_updated_at or (timezone.now() - instance.embedding_updated_at).seconds > 5:
-            update_user_embedding(instance)
+# 북마크 관련 시그널은 book_like 뷰에서 직접 처리
 
 @receiver(post_save, sender=User)
 def update_user_embedding_on_profile_change(sender, instance, created, **kwargs):

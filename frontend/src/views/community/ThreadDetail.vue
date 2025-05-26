@@ -177,7 +177,7 @@ export default {
           comments: response.data.comments || []
         }
         this.isLiked = response.data.is_liked || false
-        this.isFollowing = response.data.is_following || false
+        this.isFollowing = response.data.is_followed || false
       } catch (err) {
         console.error('쓰레드 불러오기 실패:', err)
         this.$router.push('/not-found')
