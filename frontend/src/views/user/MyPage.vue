@@ -178,7 +178,7 @@
         </div>
         <div class="books-container small horizontal-scroll">
           <div
-            v-for="book in user.recent_liked_books || []"
+            v-for="book in likedBooks || []"
             :key="book.id"
             class="custom-card"
             @click="navigateToBook(book.id)"
@@ -187,7 +187,7 @@
             <div class="multi-ellipsis card-title">{{ book.title }}</div>
           </div>
         </div>
-        <div v-if="!user.recent_liked_books || user.recent_liked_books.length === 0" class="empty-state">
+        <div v-if="!likedBooks?.length" class="empty-state">
           찜한 도서가 없습니다.
         </div>
       </div>
@@ -396,7 +396,7 @@ export default {
     },
     closeLikedBooksModal() {
       this.showLikedBooksList = false
-      this.likedBooks = []
+      // 페이지네이션 상태만 초기화
       this.likedBooksNext = null
       this.likedBooksPrev = null
       this.errorLikedBooks = null

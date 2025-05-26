@@ -23,6 +23,11 @@ def create_user_metadata_text(user):
     """
     사용자의 메타데이터를 텍스트로 변환합니다.
     """
+    from .models import User
+    if not isinstance(user, User):
+        print(f"Warning: Expected User instance, got {type(user)}")
+        return ""
+        
     metadata = []
     
     # 관심 카테고리 정보 추가

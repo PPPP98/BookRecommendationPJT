@@ -108,8 +108,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
     follower_count = serializers.IntegerField()
     following_count = serializers.IntegerField()
     is_following = serializers.SerializerMethodField()
-    recent_liked_books = BookSimpleSerializer(many=True, read_only=True)
-    recent_following = UserSimpleSerializer(many=True, read_only=True)
     interested_categories = serializers.SerializerMethodField()
 
     class Meta:
@@ -117,7 +115,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'nickname', 'profile_image', 'bio',
             'follower_count', 'following_count', 'is_following',
-            'recent_liked_books', 'recent_following', 'interested_categories'
+            'interested_categories'
         ]
 
     def get_is_following(self, obj):

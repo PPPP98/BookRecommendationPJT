@@ -39,6 +39,7 @@ class ThreadDetailSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
     is_liked = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
+    is_followed = serializers.SerializerMethodField()
 
     class Meta:
         model = Thread
@@ -50,12 +51,19 @@ class ThreadDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "user",
-            "book",  # book 필드 추가
+            "book",  # book 필드 추가            
             "comments",
             "is_liked",
             "like_count",
+            "is_followed",
         ]
 
+    def get_is_followed(self, obj):
+        user = self.context.get('request').user
+        if user and user.is_authenticated and user.id != obj.user.id:
+            return user.following.filter(id=obj.user.id).exists()
+        return False
+        
     def get_is_liked(self, obj):
         user = self.context.get('request').user
         if user.is_authenticated:
