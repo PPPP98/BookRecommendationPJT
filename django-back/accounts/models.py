@@ -4,7 +4,7 @@ from django.utils import timezone
 from model_utils import FieldTracker
 
 class User(AbstractUser):
-    tracker = FieldTracker(fields=['bio'])
+    tracker = FieldTracker(fields=['bio', 'embedding_vector'])
     
     profile_image = models.ImageField(
         upload_to='users/images/',  # 이미지 저장 경로
