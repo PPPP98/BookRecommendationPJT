@@ -31,48 +31,23 @@
       </div>
 
       <!-- 회원정보 수정 폼 (내 프로필일 때만) -->
-      <div v-if="user && isMine">
+       <div v-if="user && isMine">
         <div class="profile-edit-header">
           <h2>회원 정보 수정</h2>
           <button v-if="!editMode" class="edit-btn" @click="startEdit">수정</button>
         </div>
-        <form v-if="editMode" class="profile-edit-form" @submit.prevent="submitEdit">
-          <div class="form-row">
-            <label>프로필 이미지</label>
-            <input type="file" accept="image/*" @change="onFileChange" />
-            <img
-              :src="previewImage || user.profile_image || fallbackProfile"
-              class="profile-edit-img"
-              @error="onProfileImgError"
-            />
-          </div>
-          <div class="form-row">
-            <label for="nickname">닉네임</label>
-            <input id="nickname" v-model="editForm.nickname" required maxlength="30" />
-          </div>
-          <div class="form-row">
-            <label for="bio">자기소개</label>
-            <textarea id="bio" v-model="editForm.bio" maxlength="100" />
-          </div>
-          <div class="form-row">
-            <label>관심 카테고리</label>
-            <div class="category-checkboxes">
-              <label v-for="cat in allCategories" :key="cat.id" class="category-checkbox">
-                <input
-                  type="checkbox"
-                  :value="cat.id"
-                  v-model="editForm.interested_categories"
-                />
-                {{ cat.name }}
-              </label>
-            </div>
-          </div>
-          <div class="edit-actions">
-            <button type="submit" class="save-btn" :disabled="editLoading">저장</button>
-            <button type="button" class="cancel-btn" @click="cancelEdit" :disabled="editLoading">취소</button>
-          </div>
-          <div v-if="editError" class="error-state">{{ editError }}</div>
-        </form>
+        <UserEditForm
+          v-if="editMode"
+          :user="user"
+          :all-categories="allCategories"
+          :fallback-profile="fallbackProfile"
+          :edit-loading="editLoading"
+          :edit-error="editError"
+          @update="onUserUpdated"
+          @cancel="cancelEdit"
+          @start-loading="editLoading = true"
+          @end-loading="editLoading = false"
+        />
       </div>
 
       <div v-else-if="loadingUser" class="loading-state">프로필 정보를 불러오는 중...</div>
@@ -225,15 +200,17 @@ import UserInfo from '@/components/user/UserInfo.vue'
 import BookCard from '@/components/books/BookCard.vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import UserEditForm from '@/components/user/UserEditForm.vue'
 
 export default {
   name: 'MyPage',
   components: {
-    Navbar,
-    Footer,
-    UserInfo,
-    BookCard
-  },
+  Navbar,
+  Footer,
+  UserInfo,
+  BookCard,
+  UserEditForm
+},
   data() {
     return {
       user: null,
@@ -296,6 +273,14 @@ export default {
       } catch {
         return 0
       }
+    },
+    onUserUpdated(updatedUser) {
+      this.user = updatedUser
+      this.editMode = false
+    },
+    cancelEdit() {
+      this.editMode = false
+      this.editError = null
     },
     async fetchUserProfile(userId) {
       this.loadingUser = true
