@@ -242,3 +242,27 @@ def popular_threads(request):
     serializer = ThreadListSerializer(queryset, many=True)
     
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def following_threads(request):
+    """
+    팔로우 중인 사용자들의 최신 쓰레드 5개 조회
+    GET /api/threads/following/
+    """
+    # 팔로우 중인 사용자들의 ID 목록 가져오기
+    following_ids = request.user.following.values_list('id', flat=True)
+    
+    # 팔로우 중인 사용자들의 최신 쓰레드 5개 조회
+    threads = Thread.objects.filter(
+        user_id__in=following_ids
+    ).select_related(
+        'user', 'book'
+    ).annotate(
+        like_count=Count('liked_users'),
+        comment_count=Count('comments')
+    ).order_by('-created_at')[:5]
+
+    serializer = ThreadListSerializer(threads, many=True, context={'request': request})
+    return Response(serializer.data)
