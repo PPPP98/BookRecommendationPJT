@@ -37,6 +37,20 @@
           </div>
         </div>
 
+        <!-- 팔로잉 쓰레드 섹션 -->
+        <div v-if="followingThreads.length > 0" class="following-thread-section">
+          <h2>👥 팔로잉 쓰레드</h2>
+          <div class="following-thread-list">
+            <ThreadCard
+              v-for="thread in followingThreads"
+              :key="thread.id"
+              :thread="thread"
+              :large="true"
+              @thread-click="goToThread"
+            />
+          </div>
+        </div>
+
         <div class="divider"></div>
 
         <!-- 전체 쓰레드 목록 (세로 나열) -->
@@ -74,7 +88,6 @@ import ThreadCard from '@/components/thread/ThreadCard.vue'
 import axios from 'axios'
 
 function toRelativeUrl(url) {
-  // 절대 URL이면 /api/threads/... 부분만 추출
   if (!url) return null
   try {
     const u = new URL(url)
@@ -99,12 +112,14 @@ export default {
       popularThreads: [],
       currentPopularIndex: 0,
       showSlideButtons: false,
-      slideInterval: null
+      slideInterval: null,
+      followingThreads: []
     }
   },
   mounted() {
     this.fetchPopularThreads()
     this.fetchThreads()
+    this.fetchFollowingThreads()
     this.startSlideInterval()
   },
   beforeDestroy() {
@@ -124,7 +139,6 @@ export default {
       }
       try {
         const { data } = await axios.get(apiUrl)
-        // 명세에 따라 항상 results 배열 사용
         this.threads = Array.isArray(data.results) ? data.results : []
         this.next = data.next
         this.prev = data.previous
@@ -148,6 +162,20 @@ export default {
         this.currentPopularIndex = 0
       } catch {
         this.popularThreads = []
+      }
+    },
+    // 팔로잉 쓰레드 불러오기 (최대 5개)
+    async fetchFollowingThreads() {
+      try {
+        // 실제 API 엔드포인트에 맞게 수정
+        const { data } = await axios.get('/api/threads/following/?limit=5')
+        this.followingThreads = Array.isArray(data)
+          ? data.slice(0, 5)
+          : Array.isArray(data.results)
+          ? data.results.slice(0, 5)
+          : []
+      } catch {
+        this.followingThreads = []
       }
     },
     goToThread(threadId) {
@@ -268,6 +296,66 @@ export default {
 .slide-btn.next {
   right: 0;
 }
+
+/* 팔로잉 쓰레드 섹션 */
+.following-thread-section {
+  margin-bottom: 2.5rem;
+}
+.following-thread-section h2 {
+  font-size: 1.08rem;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+  color: #1976d2;
+}
+/* 가로 스크롤 카드 리스트 */
+.following-thread-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.2rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+.following-thread-list .thread-card.large {
+  min-width: 320px;
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (max-width: 1200px) {
+  .thread-container.wide {
+    max-width: 98vw;
+    padding: 1rem 0.5rem 1.5rem 0.5rem;
+  }
+  .popular-thread-slide .thread-card.large,
+  .all-threads-list .thread-card.large {
+    min-width: 98vw;
+    max-width: 98vw;
+  }
+  .following-thread-list {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .main-content { padding: 0.5rem; }
+  .thread-container.wide { padding: 0.5rem 0.1rem 1rem 0.1rem; }
+  .popular-thread-slide .thread-card.large,
+  .all-threads-list .thread-card.large {
+    min-width: 100vw;
+    max-width: 100vw;
+    border-radius: 0;
+    padding: 0.8rem 0.4rem;
+  }
+  .following-thread-list {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+    padding-bottom: 0.2rem;
+  }
+  .following-thread-list .thread-card.large {
+    min-width: 0;
+    max-width: 100vw;
+  }
+}
 .all-threads-list {
   display: flex;
   flex-direction: column;
@@ -290,27 +378,5 @@ export default {
   gap: 1rem;
   justify-content: center;
   margin: 2rem 0;
-}
-@media (max-width: 1200px) {
-  .thread-container.wide {
-    max-width: 98vw;
-    padding: 1rem 0.5rem 1.5rem 0.5rem;
-  }
-  .popular-thread-slide .thread-card.large,
-  .all-threads-list .thread-card.large {
-    min-width: 98vw;
-    max-width: 98vw;
-  }
-}
-@media (max-width: 600px) {
-  .main-content { padding: 0.5rem; }
-  .thread-container.wide { padding: 0.5rem 0.1rem 1rem 0.1rem; }
-  .popular-thread-slide .thread-card.large,
-  .all-threads-list .thread-card.large {
-    min-width: 100vw;
-    max-width: 100vw;
-    border-radius: 0;
-    padding: 0.8rem 0.4rem;
-  }
 }
 </style>

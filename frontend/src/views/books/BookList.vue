@@ -5,7 +5,7 @@
       <div class="profile-section">
         <img
           class="profile-image"
-          :src="user.value?.profile_image || defaultProfile"
+          :src="userProfileImage"
           :alt="username ? username + '의 프로필' : '프로필'"
           @error="onImgError"
         />
@@ -63,6 +63,8 @@
           v-for="book in books"
           :key="book.id"
           :book="book"
+          :like-count="book.like_count"
+          :comment-count="book.thread_count"
           @click="navigateToDetail(book.id)"
         />
       </div>
@@ -101,6 +103,9 @@ import BookCard from '@/components/books/BookCard.vue'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 
+const CDN_PROFILE = 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+
 export default {
   name: 'BookList',
   components: {
@@ -122,7 +127,6 @@ export default {
     const sortBy = ref('pub_date')
     const searchQuery = ref(route.query.q || '')
 
-    // 사용자 정보 가져오기 (Pinia storeToRefs로 반응형)
     const authStore = useAuthStore()
     const { user } = storeToRefs(authStore)
     const username = computed(() =>
@@ -131,18 +135,23 @@ export default {
       user.value?.email ||
       ''
     )
-    // CDN 기본 이미지
-    const defaultProfile = 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+
+    // NavBar와 동일하게 사용자 프로필 이미지 처리
+    const userProfileImage = computed(() => {
+      const img = user.value?.profile_image
+      if (!img) return CDN_PROFILE
+      if (img.startsWith('http')) return img
+      return `${BACKEND_URL}${img}`
+    })
 
     function onImgError(e) {
-      if (e.target.src !== defaultProfile) {
-        e.target.src = defaultProfile
+      if (e.target.src !== CDN_PROFILE) {
+        e.target.src = CDN_PROFILE
       }
     }
 
     const totalPages = computed(() => Math.ceil(totalBooks.value / itemsPerPage.value))
 
-    // 도서 목록 조회
     const fetchBooks = async () => {
       loading.value = true
       error.value = null
@@ -171,7 +180,6 @@ export default {
       }
     }
 
-    // 카테고리 목록 조회
     const fetchCategories = async () => {
       try {
         const response = await axios.get('/api/books/categories/')
@@ -237,12 +245,17 @@ export default {
       username,
       searchQuery,
       user,
-      defaultProfile,
+      userProfileImage,
       onImgError
     }
   }
 }
 </script>
+
+<style scoped>
+/* ...기존 스타일 그대로... */
+</style>
+
 
 <style scoped>
 .book-list-page {
