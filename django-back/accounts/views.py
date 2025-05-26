@@ -14,6 +14,8 @@ from .serializers import (
 )
 from .paginations import UserListPagination
 from books.models import Book
+from .embedding_utils import find_similar_books_for_user, update_user_embedding
+from books.serializers import BookSimilarSerializer
 
 User = get_user_model()
 
@@ -272,3 +274,33 @@ def profile(request):
             return Response(serializer.data)
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def recommended_books(request):
+    """
+    현재 사용자에게 맞춤 도서를 추천합니다.
+    GET /api/accounts/recommended-books/
+    """
+    user = request.user
+
+    # 임베딩 벡터가 없는 경우 생성
+    if not user.embedding_vector:
+        success = update_user_embedding(user)
+        if not success:
+            return Response(
+                {'error': '사용자 프로필 데이터가 부족합니다. 관심 카테고리나 자기소개를 추가해주세요.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    # 유사한 책 검색
+    similar_books = find_similar_books_for_user(user, top_k=5)
+    
+    if not similar_books:
+        return Response(
+            {'error': '추천할 만한 도서를 찾지 못했습니다.'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = BookSimilarSerializer(similar_books, many=True)
+    return Response(serializer.data)

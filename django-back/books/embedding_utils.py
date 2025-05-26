@@ -6,10 +6,8 @@ from django.conf import settings
 from django.utils import timezone
 from .models import Book
 
-# OpenAI API 키 설정
-client = OpenAI(api_key=settings.OPEN_AI_KEY)
-
 def create_book_embedding(book):
+    client = OpenAI(api_key=settings.OPEN_AI_KEY)
     """
     책 정보를 기반으로 OpenAI 임베딩 생성
     가장 저렴한 모델인 text-embedding-3-small 사용
@@ -88,3 +86,18 @@ def batch_create_embeddings(limit=None, force_update=False):
         "success": success,
         "failed": failed
     }
+
+def get_embedding(text):
+    client = OpenAI(api_key=settings.OPEN_AI_KEY)
+    """
+    주어진 텍스트의 임베딩을 생성합니다.
+    """
+    try:
+        response = client.embeddings.create(
+            input=text,
+            model="text-embedding-3-small"
+        )
+        return response.data[0].embedding
+    except Exception as e:
+        print(f"임베딩 생성 실패: {str(e)}")
+        raise

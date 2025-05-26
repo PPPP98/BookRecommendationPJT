@@ -19,4 +19,5 @@ urlpatterns = [
     path('<int:user_id>/followers/', views.followers_list, name='followers-list'),
     path('<int:user_id>/profile/', views.profile_detail, name='profile-detail'),
     path('<int:user_id>/liked-books/', views.liked_books, name='liked-books'),
+    path('recommended-books/', views.recommended_books, name='recommended-books'),
 ]
