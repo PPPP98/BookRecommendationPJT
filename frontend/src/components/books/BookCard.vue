@@ -3,16 +3,16 @@
     <div class="book-cover">
       <img 
         :src="book.cover_image || book.cover || defaultCover"
-        :alt="book.title"
+        :alt="book.title || '도서 이미지'"
         class="cover-image"
         @error="onImgError"
       >
     </div>
     <div class="book-info">
-      <h3 class="title">{{ book.title }}</h3>
-      <p class="author">{{ book.author }}</p>
+      <h3 class="title">{{ book.title || '제목 없음' }}</h3>
+      <p class="author">{{ book.author || '저자 정보 없음' }}</p>
       <div class="metadata">
-        <span class="category">{{ book.category_name || book.category }}</span>
+        <span class="category">{{ book.category_name || book.category || '카테고리 없음' }}</span>
         <div class="stats">
           <span class="likes">
             <i class="fas fa-heart"></i> {{ likeCount || 0 }}
@@ -34,11 +34,8 @@ export default {
       type: Object,
       required: true,
       validator(value) {
-        const requiredFields = ['id', 'title', 'author']
-        const hasRequiredFields = requiredFields.every(prop => prop in value)
-        const hasCover = 'cover' in value || 'cover_image' in value
-        const hasCategory = 'category' in value || 'category_name' in value
-        return hasRequiredFields && hasCover && hasCategory
+        // title만 필수, 나머지는 안전하게 처리
+        return value && typeof value.title === 'string'
       }
     },
     likeCount: {

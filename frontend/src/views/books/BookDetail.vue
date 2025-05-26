@@ -14,6 +14,9 @@
             <span v-if="book.pub_date" class="pub-date">| 출간일: {{ book.pub_date }}</span>
           </div>
           <div class="book-category">카테고리: {{ book.category_name }}</div>
+          <div class="book-rating" v-if="book.customer_review_rank">
+            평점: {{ book.customer_review_rank }} / 5
+          </div>
           <div class="book-likes-action">
             <button
               class="like-button"
@@ -50,6 +53,7 @@
         </button>
       </div>
 
+      <!-- 작성된 커뮤니티 글 목록 -->
       <div class="book-threads" v-if="book.threads && book.threads.length">
         <h3>이 책의 커뮤니티 글 ({{ book.thread_count }})</h3>
         <ul>
@@ -58,8 +62,32 @@
           </li>
         </ul>
       </div>
+      <div class="book-threads" v-else>
+        <h3>이 책의 커뮤니티 글</h3>
+        <div class="empty-state">아직 작성된 글이 없습니다.</div>
+      </div>
+
+      <!-- 유사 도서 목록 -->
+      <div class="similar-books-section" v-if="book.similar_books && book.similar_books.length">
+        <h3>유사 도서</h3>
+        <div class="similar-books-list">
+          <div
+            class="similar-book-card"
+            v-for="sim in book.similar_books"
+            :key="sim.id"
+            @click="navigateToBook(sim.id)"
+          >
+            <img :src="sim.cover" :alt="sim.title" class="similar-book-cover" />
+            <div class="similar-book-title">{{ sim.title }}</div>
+            <div class="similar-book-author">{{ sim.author }}</div>
+            <div class="similar-book-category">{{ sim.category_name }}</div>
+            <div class="similarity-score">유사도: {{ (sim.similarity_score * 100).toFixed(1) }}%</div>
+          </div>
+        </div>
+      </div>
     </main>
 
+    <ErrorPage v-else-if="error" type="error" :message="error" />
     <ErrorPage v-else type="loading" message="도서 정보를 불러오는 중입니다." />
 
     <Footer />
@@ -94,14 +122,30 @@ export default {
   },
   methods: {
     async fetchBook() {
-      try {
-        const response = await axios.get(`/api/books/${this.id}/`)
-        this.book = response.data
-      } catch (err) {
-        this.error = '도서 정보를 불러오는데 실패했습니다.'
-        console.error('도서 상세 정보 불러오기 실패:', err)
-      }
-    },
+  try {
+    const response = await axios.get(`/api/books/${this.id}/`)
+    this.book = response.data
+    this.error = null
+
+    // === threads와 thread_count 실제 값 콘솔 출력 ===
+    console.log('book.threads:', this.book.threads)
+    console.log('book.thread_count:', this.book.thread_count)
+    // threads 배열의 각 thread도 출력
+    if (Array.isArray(this.book.threads)) {
+      this.book.threads.forEach((thread, idx) => {
+        console.log(`thread[${idx}]`, thread)
+      })
+    }
+    // ============================================
+  } catch (err) {
+    if (err.response && err.response.status === 404) {
+      this.error = '도서를 찾을 수 없습니다.'
+    } else {
+      this.error = '도서 정보를 불러오는데 실패했습니다.'
+    }
+    this.book = null
+  }
+},
     async toggleLike() {
       if (!this.book) return
       this.likeLoading = true
@@ -121,13 +165,15 @@ export default {
         this.book.like_count = response.data.like_count
       } catch (err) {
         alert('좋아요 처리 중 오류가 발생했습니다.')
-        console.error('좋아요 처리 실패:', err)
       } finally {
         this.likeLoading = false
       }
     },
     navigateToThreadWrite() {
       this.$router.push({ name: 'ThreadWrite', params: { bookId: this.book.id } })
+    },
+    navigateToBook(bookId) {
+      this.$router.push({ name: 'BookDetail', params: { id: bookId } })
     }
   },
   mounted() {
@@ -169,7 +215,7 @@ export default {
   color: #666;
   margin-top: 0.5rem;
 }
-.book-author, .book-category {
+.book-author, .book-category, .book-rating {
   margin-top: 0.7rem;
   color: #444;
 }
@@ -262,5 +308,62 @@ export default {
 .book-threads a {
   color: #0066cc;
   text-decoration: underline;
+}
+.empty-state {
+  color: #888;
+  padding: 1rem 0;
+  font-size: 0.97rem;
+  text-align: center;
+}
+.similar-books-section {
+  margin-top: 2.5rem;
+}
+.similar-books-list {
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.similar-book-card {
+  background: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 1rem;
+  width: 170px;
+  cursor: pointer;
+  text-align: center;
+  transition: box-shadow 0.18s, border 0.18s;
+  border: 1.5px solid #eee;
+}
+.similar-book-card:hover {
+  box-shadow: 0 6px 20px rgba(25,118,210,0.12);
+  border: 1.5px solid #1976d2;
+}
+.similar-book-cover {
+  width: 80px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 0.7rem;
+}
+.similar-book-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  color: #1976d2;
+}
+.similar-book-author {
+  font-size: 0.95rem;
+  color: #444;
+  margin-bottom: 0.1rem;
+}
+.similar-book-category {
+  font-size: 0.92rem;
+  color: #888;
+}
+.similarity-score {
+  font-size: 0.9rem;
+  color: #1976d2;
+  margin-top: 0.2rem;
 }
 </style>
