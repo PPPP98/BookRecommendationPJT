@@ -12,7 +12,7 @@ def update_user_embedding_on_categories_change(sender, instance, action, **kwarg
         if not instance.embedding_updated_at or (timezone.now() - instance.embedding_updated_at).seconds > 5:
             update_user_embedding(instance)
 
-# 북마크 관련 시그널은 제거하고 book_like 뷰에서 직접 처리
+# 북마크 관련 시그널은 book_like 뷰에서 직접 처리
 
 @receiver(post_save, sender=User)
 def update_user_embedding_on_profile_change(sender, instance, created, **kwargs):
