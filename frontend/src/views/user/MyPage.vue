@@ -153,7 +153,7 @@
         </div>
         <div class="books-container small horizontal-scroll">
           <div
-            v-for="book in likedBooks || []"
+            v-for="book in (likedBooks || []).slice(0, 5)"
             :key="book.id"
             class="custom-card"
             @click="navigateToBook(book.id)"
