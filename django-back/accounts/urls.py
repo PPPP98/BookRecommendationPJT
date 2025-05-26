@@ -11,6 +11,9 @@ urlpatterns = [
     path('check-email/', views.check_email, name='check-email'),
     path('check-nickname/', views.check_nickname, name='check-nickname'),
     
+    # 프로필 관련 URLs
+    path('profile/', views.profile, name='profile'),  # 내 프로필 조회/수정
+    
     # 팔로우 관련 URLs
     path('<int:user_id>/follow/', views.follow_toggle, name='follow-toggle'),
     path('<int:user_id>/following/', views.following_list, name='following-list'),

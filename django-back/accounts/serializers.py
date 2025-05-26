@@ -110,13 +110,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
     is_following = serializers.SerializerMethodField()
     recent_liked_books = BookSimpleSerializer(many=True, read_only=True)
     recent_following = UserSimpleSerializer(many=True, read_only=True)
+    interested_categories = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'username', 'nickname', 'profile_image', 'bio',
             'follower_count', 'following_count', 'is_following',
-            'recent_liked_books', 'recent_following'
+            'recent_liked_books', 'recent_following', 'interested_categories'
         ]
 
     def get_is_following(self, obj):
@@ -124,6 +125,47 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if user and user.is_authenticated:
             return obj.followers.filter(id=user.id).exists()
         return False
+        
+    def get_interested_categories(self, obj):
+        return [
+            {'id': category.id, 'name': category.name}
+            for category in obj.interested_categories.all()
+        ]
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    """사용자 프로필 수정 시리얼라이저"""
+    interested_categories = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Category.objects.all(),
+        required=False
+    )
+
+    class Meta:
+        model = User
+        fields = ['nickname', 'profile_image', 'bio', 'interested_categories']
+        
+    def validate_profile_image(self, image):
+        if not image:
+            return image
+            
+        # 파일 크기 검사 (3MB)
+        if image.size > settings.MAX_UPLOAD_SIZE:
+            raise ValidationError('이미지 크기는 3MB를 초과할 수 없습니다.')
+            
+        # 파일 확장자 검사
+        ext = os.path.splitext(image.name)[1][1:].lower()
+        if ext not in settings.ALLOWED_IMAGE_EXTENSIONS:
+            raise ValidationError('지원하지 않는 이미지 형식입니다. (jpg, jpeg, png, gif만 가능)')
+            
+        return image
+
+    def validate_nickname(self, value):
+        # 현재 사용자의 닉네임은 제외하고 중복 검사
+        user = self.context['request'].user
+        if User.objects.exclude(pk=user.pk).filter(nickname=value).exists():
+            raise ValidationError('이미 사용 중인 닉네임입니다.')
+        return value
 
 
 class UserFollowListSerializer(serializers.ModelSerializer):

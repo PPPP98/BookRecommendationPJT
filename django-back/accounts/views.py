@@ -10,6 +10,7 @@ from .serializers import (
     UserFollowListSerializer,
     UserProfileSerializer,
     BookSimpleSerializer,
+    UserProfileUpdateSerializer,
 )
 from .paginations import UserListPagination
 from books.models import Book
@@ -221,3 +222,53 @@ def liked_books(request, user_id):
     }
 
     return Response(response_data)
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def profile(request):
+    """
+    프로필 조회 및 수정
+    GET /api/accounts/profile/ : 프로필 조회
+    PUT /api/accounts/profile/ : 프로필 수정
+    """
+    user = request.user
+
+    if request.method == 'GET':
+        # 팔로워/팔로잉 수 계산
+        user = User.objects.annotate(
+            follower_count=Count('followers', distinct=True),
+            following_count=Count('following', distinct=True)
+        ).prefetch_related(
+            'interested_categories',
+            Prefetch(
+                'like_books',
+                queryset=Book.objects.all()[:5],
+                to_attr='recent_liked_books'
+            ),
+            Prefetch(
+                'following',
+                queryset=User.objects.all()[:5],
+                to_attr='recent_following'
+            )
+        ).get(id=user.id)
+
+        serializer = UserProfileSerializer(user, context={'request': request})
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        serializer = UserProfileUpdateSerializer(
+            user, 
+            data=request.data, 
+            context={'request': request},
+            partial=True
+        )
+        
+        if serializer.is_valid():
+            # 관심 카테고리 처리
+            if 'interested_categories' in request.data:
+                user.interested_categories.set(serializer.validated_data.get('interested_categories', []))
+            
+            serializer.save()
+            return Response(serializer.data)
+            
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
