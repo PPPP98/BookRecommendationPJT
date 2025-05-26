@@ -28,4 +28,8 @@ urlpatterns = [
     path('api/accounts/', include('accounts.urls')),
     path('api/books/', include('books.urls')),
     path('api/threads/', include('threads.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# 개발 환경에서 media 파일 서빙
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

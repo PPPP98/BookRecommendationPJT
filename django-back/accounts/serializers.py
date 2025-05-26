@@ -2,7 +2,10 @@ from rest_framework import serializers
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from django.contrib.auth import get_user_model
 from books.models import Category, Book
-from django.db.models import Count
+from django.core.exceptions import ValidationError
+from django.conf import settings
+import os
+from dj_rest_auth.serializers import LoginSerializer
 
 User = get_user_model()
 
@@ -53,6 +56,21 @@ class CustomRegisterSerializer(RegisterSerializer):
         categories = self.cleaned_data.get('interested_categories', [])
         if categories:
             user.interested_categories.set(categories)
+
+    def validate_profile_image(self, image):
+        if not image:
+            return image
+            
+        # 파일 크기 검사 (3MB)
+        if image.size > settings.MAX_UPLOAD_SIZE:
+            raise ValidationError('이미지 크기는 3MB를 초과할 수 없습니다.')
+            
+        # 파일 확장자 검사
+        ext = os.path.splitext(image.name)[1][1:].lower()
+        if ext not in settings.ALLOWED_IMAGE_EXTENSIONS:
+            raise ValidationError('지원하지 않는 이미지 형식입니다. (jpg, jpeg, png, gif만 가능)')
+            
+        return image
 
 class UserSimpleSerializer(serializers.ModelSerializer):
     """팔로우/팔로워 목록에서 사용할 간단한 사용자 정보 시리얼라이저"""
@@ -121,3 +139,15 @@ class UserFollowListSerializer(serializers.ModelSerializer):
         if user and user.is_authenticated and user.id != obj.id:
             return user.following.filter(id=obj.id).exists()
         return False
+
+class CustomLoginSerializer(LoginSerializer):
+    email = None  # email 필드 제거
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(style={'input_type': 'password'})
+
+class CustomUserDetailsSerializer(serializers.ModelSerializer):
+    """로그인 응답에 포함될 사용자 상세 정보 시리얼라이저"""
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'nickname', 'profile_image', 'username')
+        read_only_fields = ('email',)

@@ -155,20 +155,23 @@ USE_I18N = True
 
 USE_TZ = True
 
+import os
+from datetime import timedelta
+from dotenv import load_dotenv
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
 
+# Media files (User uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-import os
-from datetime import timedelta
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -181,7 +184,8 @@ REST_AUTH = {
     'JWT_AUTH_COOKIE': 'my-app-auth',
     'JWT_AUTH_REFRESH_COOKIE': 'my-refresh-token',
     'REGISTER_SERIALIZER': 'accounts.serializers.CustomRegisterSerializer',
-    'LOGIN_SERIALIZER': 'dj_rest_auth.serializers.LoginSerializer',
+    'LOGIN_SERIALIZER': 'accounts.serializers.CustomLoginSerializer',
+    'USER_DETAILS_SERIALIZER': 'accounts.serializers.CustomUserDetailsSerializer',
 }
 
 # JWT 설정
@@ -199,10 +203,61 @@ ACCOUNT_UNIQUE_EMAIL = False
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 # CORS 설정
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',  # Vue.js 개발 서버
-]
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',  # Vite 개발 서버
+]
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # 개발환경에서만 모든 origin 허용
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/4.2/howto/static-files/
+
+STATIC_URL = 'static/'
+
+# Media files (User uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+load_dotenv()
+
+# 커스텀 유저 모델 설정
+AUTH_USER_MODEL = 'accounts.User'
+
+# dj-rest-auth 설정
+REST_AUTH = {
+    'USE_JWT': True,
+    'JWT_AUTH_COOKIE': 'my-app-auth',
+    'JWT_AUTH_REFRESH_COOKIE': 'my-refresh-token',
+    'REGISTER_SERIALIZER': 'accounts.serializers.CustomRegisterSerializer',
+    'LOGIN_SERIALIZER': 'accounts.serializers.CustomLoginSerializer',
+    'USER_DETAILS_SERIALIZER': 'accounts.serializers.CustomUserDetailsSerializer',
+}
+
+# JWT 설정
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
+
+# django-allauth 설정
+ACCOUNT_LOGIN_METHODS = {'username'}  # username으로만 로그인 가능
+ACCOUNT_SIGNUP_FIELDS = ['username*', 'password1*', 'password2*']  # 회원가입 시 필수 필드
+ACCOUNT_UNIQUE_EMAIL = False
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+# CORS 설정
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',  # Vite 개발 서버
+]
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # 개발환경에서만 모든 origin 허용
 
 # Cache 설정
 CACHES = {
@@ -216,20 +271,10 @@ CACHES = {
     }
 }
 
-# 미디어 파일 설정
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# 파일 업로드 제한 설정
+FILE_UPLOAD_MAX_MEMORY_SIZE = 3145728  # 3MB
+FILE_UPLOAD_PERMISSIONS = 0o644
+MAX_UPLOAD_SIZE = 3145728  # 3MB
 
-# Elasticsearch configuration
-ELASTICSEARCH_DSL = {
-    'default': {
-        'hosts': ['http://localhost:9200'],
-        'verify_certs': False,
-        'use_ssl': False,
-        'http_auth': None
-    },
-}
-
-# 검색 결과의 정확도를 높이기 위한 설정
-ELASTICSEARCH_DSL_AUTOSYNC = True
-ELASTICSEARCH_DSL_AUTO_REFRESH = True
+# 허용된 이미지 확장자
+ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif']
