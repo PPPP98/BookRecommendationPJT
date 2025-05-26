@@ -2,7 +2,12 @@
   <div class="custom-thread-card" @click="navigateToDetail">
     <div class="card-top">
       <div class="profile">
-        <img :src="thread.user.profile_image" class="profile-img" />
+        <img
+          :src="profileImageUrl"
+          class="profile-img"
+          :alt="thread.user.nickname || '프로필'"
+          @error="onImgError"
+        />
         <div class="nickname">{{ thread.user.nickname }}</div>
       </div>
       <div class="created">{{ formatDate(thread.created_at) }}</div>
@@ -27,10 +32,21 @@
 </template>
 
 <script>
+const CDN_PROFILE = 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+
 export default {
   name: 'CustomThreadCard',
   props: {
     thread: { type: Object, required: true }
+  },
+  computed: {
+    profileImageUrl() {
+      const img = this.thread.user?.profile_image
+      if (!img) return CDN_PROFILE
+      if (img.startsWith('http')) return img
+      return `${BACKEND_URL}${img}`
+    }
   },
   methods: {
     navigateToDetail() {
@@ -39,6 +55,11 @@ export default {
     formatDate(date) {
       if (!date) return ''
       return date.slice(0, 10)
+    },
+    onImgError(e) {
+      if (e.target.src !== CDN_PROFILE) {
+        e.target.src = CDN_PROFILE
+      }
     }
   }
 }
