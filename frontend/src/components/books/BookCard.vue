@@ -1,24 +1,12 @@
-<!-- 
-  BookCard 컴포넌트
-  역할: 도서 정보를 카드 형태로 표시하는 재사용 가능한 컴포넌트
-  Props:
-    - book: Object (필수) - 도서 정보
-      {
-        id: Number,
-        title: String,
-        author: String,
-        cover: String,
-        category: String,
-        likes_count: Number,
-        threads_count: Number
-      }
--->
 <template>
-  <div class="book-card" @click="$emit('click')">    <!-- 도서 커버 이미지 -->
-    <div class="book-cover">      <img 
-        :src="book.cover_image || book.cover"
+  <div class="book-card" @click="$emit('click')">
+    <!-- 도서 커버 이미지 -->
+    <div class="book-cover">
+      <img 
+        :src="book.cover_image || book.cover || defaultCover"
         :alt="book.title"
         class="cover-image"
+        @error="onImgError"
       >
     </div>
     
@@ -26,7 +14,6 @@
     <div class="book-info">
       <h3 class="title">{{ book.title }}</h3>
       <p class="author">{{ book.author }}</p>
-      
       <!-- 메타데이터: 카테고리, 좋아요 수, 댓글 수 -->
       <div class="metadata">
         <span class="category">{{ book.category_name || book.category }}</span>
@@ -50,18 +37,27 @@ export default {
     book: {
       type: Object,
       required: true,
-    validator(value) {
+      validator(value) {
         // 필수 필드 검증 - API 응답 구조에 맞게 수정
         const requiredFields = ['id', 'title', 'author'];
         const hasRequiredFields = requiredFields.every(prop => prop in value);
-        
         // cover 또는 cover_image가 있는지 확인
         const hasCover = 'cover' in value || 'cover_image' in value;
-        
         // category 또는 category_name이 있는지 확인
         const hasCategory = 'category' in value || 'category_name' in value;
-        
         return hasRequiredFields && hasCover && hasCategory;
+      }
+    }
+  },
+  data() {
+    return {
+      defaultCover: 'https://cdn-icons-png.flaticon.com/512/29/29302.png'
+    }
+  },
+  methods: {
+    onImgError(e) {
+      if (e.target.src !== this.defaultCover) {
+        e.target.src = this.defaultCover
       }
     }
   }

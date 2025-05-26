@@ -3,7 +3,12 @@
     <Navbar />
     <main class="main-content">
       <div class="profile-section">
-        <div class="profile-image"></div>
+        <img
+          class="profile-image"
+          :src="user.value?.profile_image || defaultProfile"
+          :alt="username ? username + '의 프로필' : '프로필'"
+          @error="onImgError"
+        />
         <div class="profile-info">
           <h2>{{ username ? username + '님' : '게스트' }}</h2>
           <p>당신이 좋아할 만한 도서를 AI가 추천해드릴 것입니다.</p>
@@ -117,7 +122,7 @@ export default {
     const sortBy = ref('pub_date')
     const searchQuery = ref(route.query.q || '')
 
-    // 사용자 정보 가져오기
+    // 사용자 정보 가져오기 (Pinia storeToRefs로 반응형)
     const authStore = useAuthStore()
     const { user } = storeToRefs(authStore)
     const username = computed(() =>
@@ -126,6 +131,14 @@ export default {
       user.value?.email ||
       ''
     )
+    // CDN 기본 이미지
+    const defaultProfile = 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+
+    function onImgError(e) {
+      if (e.target.src !== defaultProfile) {
+        e.target.src = defaultProfile
+      }
+    }
 
     const totalPages = computed(() => Math.ceil(totalBooks.value / itemsPerPage.value))
 
@@ -222,7 +235,10 @@ export default {
       handlePageChange,
       navigateToDetail,
       username,
-      searchQuery
+      searchQuery,
+      user,
+      defaultProfile,
+      onImgError
     }
   }
 }
@@ -255,6 +271,7 @@ export default {
   border-radius: 50%;
   margin-right: 1rem;
   background-color: #e9ecef;
+  object-fit: cover;
 }
 
 .profile-info h2 {
@@ -318,7 +335,6 @@ export default {
   margin-right: 1rem;
   letter-spacing: 0.02em;
 }
-
 .filter-select {
   padding: 0.3rem 0.8rem;
   height: 32px;

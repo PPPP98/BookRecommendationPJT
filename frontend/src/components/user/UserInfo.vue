@@ -3,8 +3,8 @@
     <div class="profile-section">
       <div class="profile-image-container">
         <img
-          :src="user.profile_image || '/default-profile.png'"
-          :alt="user.username || '프로필'"
+          :src="profileImageUrl"
+          :alt="user.nickname || '프로필'"
           class="profile-image"
           @error="onImgError"
         >
@@ -16,7 +16,7 @@
         <template v-if="isEditing">
           <div class="form-group">
             <label>닉네임</label>
-            <input v-model="editedUser.username" type="text" class="form-input">
+            <input v-model="editedUser.nickname" type="text" class="form-input">
           </div>
           <div class="form-group">
             <label>이메일</label>
@@ -41,7 +41,7 @@
           </div>
         </template>
         <template v-else>
-          <h2>{{ user.username }}</h2>
+          <h2>{{ user.nickname }}</h2>
           <p class="email">{{ user.email }}</p>
           <div class="interests">
             <span>관심 카테고리:</span>
@@ -55,13 +55,13 @@
           </div>
           <div class="stats">
             <div class="stat">
-              팔로워 {{ (user.followers && user.followers.length) || 0 }}명
+              팔로워 {{ user.follower_count ?? (user.followers && user.followers.length) ?? 0 }}명
             </div>
             <div class="stat">
-              팔로잉 {{ (user.following && user.following.length) || 0 }}명
+              팔로잉 {{ user.following_count ?? (user.following && user.following.length) ?? 0 }}명
             </div>
             <div class="stat">
-              작성글 {{ (user.threads && user.threads.length) || 0 }}개
+              작성글 {{ user.articles_count ?? (user.threads && user.threads.length) ?? 0 }}개
             </div>
           </div>
           <button v-if="editable" @click="startEdit" class="edit-button">
@@ -74,6 +74,9 @@
 </template>
 
 <script>
+const CDN_PROFILE = 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+
 export default {
   name: 'UserInfo',
   props: {
@@ -90,7 +93,15 @@ export default {
     return {
       isEditing: false,
       editedUser: null,
-      categories: ['소설', '에세이', '경제/경영', '자기계발', '인문', '과학']
+      categories: ['소설', '에세이', '경제/경영', '자기계발', '인문', '과학'],
+      defaultProfile: CDN_PROFILE
+    }
+  },
+  computed: {
+    profileImageUrl() {
+      if (!this.user?.profile_image) return this.defaultProfile
+      if (this.user.profile_image.startsWith('http')) return this.user.profile_image
+      return `${BACKEND_URL}${this.user.profile_image}`
     }
   },
   methods: {
@@ -113,28 +124,10 @@ export default {
       // TODO: 이미지 업로드 구현
     },
     onImgError(e) {
-      if (!e.target.src.endsWith('/default-profile.png')) {
-        e.target.src = '/default-profile.png'
+      if (e.target.src !== this.defaultProfile) {
+        e.target.src = this.defaultProfile
       }
     }
   }
 }
 </script>
-
-<style scoped>
-.user-info { padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
-.profile-section { display: flex; gap: 2rem;}
-.profile-image-container { text-align: center;}
-.profile-image { width: 150px; height: 150px; border-radius: 50%; margin-bottom: 1rem;}
-.info-section { flex: 1;}
-.form-group { margin-bottom: 1rem;}
-.form-group label { display: block; margin-bottom: 0.5rem;}
-.form-input { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;}
-.interests-container { display: flex; flex-wrap: wrap; gap: 1rem;}
-.interest-label { display: flex; align-items: center; gap: 0.5rem;}
-.interest-tag { background: #e9ecef; padding: 0.25rem 0.5rem; border-radius: 4px; margin-right: 0.5rem;}
-.stats { display: flex; gap: 2rem; margin: 1rem 0;}
-.edit-button { background: #0066cc; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;}
-.save-button { background: #28a745; color: white; margin-right: 1rem;}
-.cancel-button { background: #dc3545; color: white;}
-</style>

@@ -20,6 +20,12 @@ export const useAuthStore = defineStore('auth', () => {
     return !!accessToken.value && (!!user.value.pk || !!user.value.id)
   })
 
+  // ✅ setUser: store와 localStorage의 user를 모두 갱신
+  const setUser = (newUser) => {
+    user.value = { ...newUser }
+    localStorage.setItem('user', JSON.stringify(user.value))
+  }
+
   // 앱 시작/새로고침 시 localStorage에서 상태 복원
   const initializeAuth = () => {
     const savedUser = localStorage.getItem('user')
@@ -155,6 +161,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     signup,
-    initializeAuth
+    initializeAuth,
+    setUser // 반드시 반환!
   }
 })

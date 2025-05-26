@@ -101,7 +101,7 @@
             >
               <div class="user-card">
                 <div class="user-card-img-wrap">
-                  <img :src="u.profile_image" :alt="u.nickname" class="user-card-img" />
+                  <img :src="u.profile_image || fallbackProfile" :alt="u.nickname" class="user-card-img" @error="onProfileImgError" />
                 </div>
                 <div class="user-card-name">{{ u.nickname }}</div>
               </div>
@@ -126,7 +126,7 @@
             >
               <div class="user-card">
                 <div class="user-card-img-wrap">
-                  <img :src="u.profile_image" :alt="u.nickname" class="user-card-img" />
+                  <img :src="u.profile_image || fallbackProfile" :alt="u.nickname" class="user-card-img" @error="onProfileImgError" />
                 </div>
                 <div class="user-card-name">{{ u.nickname }}</div>
                 <div class="user-card-bio" v-if="u.bio">{{ u.bio }}</div>
@@ -154,7 +154,7 @@
             >
               <div class="user-card">
                 <div class="user-card-img-wrap">
-                  <img :src="u.profile_image" :alt="u.nickname" class="user-card-img" />
+                  <img :src="u.profile_image || fallbackProfile" :alt="u.nickname" class="user-card-img" @error="onProfileImgError" />
                 </div>
                 <div class="user-card-name">{{ u.nickname }}</div>
                 <div class="user-card-bio" v-if="u.bio">{{ u.bio }}</div>
@@ -239,32 +239,26 @@ export default {
       user: null,
       loadingUser: false,
       errorUser: null,
-
       followers: [],
       followersNext: null,
       followersPrev: null,
       loadingFollowers: false,
       errorFollowers: null,
-
       following: [],
       followingNext: null,
       followingPrev: null,
       loadingFollowing: false,
       errorFollowing: null,
-
       likedBooks: [],
       likedBooksNext: null,
       likedBooksPrev: null,
       loadingLikedBooks: false,
       errorLikedBooks: null,
-
       currentUserId: 0,
       isMine: false,
       showFollowerList: false,
       showFollowingList: false,
       showLikedBooksList: false,
-
-      // 회원정보 수정 관련
       editMode: false,
       editForm: {
         nickname: '',
