@@ -13,24 +13,29 @@
       <!-- 필터 및 정렬 섹션 -->
       <div class="filter-section">
         <div class="category-buttons">
-          <button 
-            class="category-button" 
-            :class="{ active: selectedCategory === '' }"
-            @click="selectedCategory = ''"
-            :disabled="loading"
-          >
-            전체
-          </button>
-          <button 
-            v-for="category in categories" 
-            :key="category.id"
-            class="category-button"
-            :class="{ active: selectedCategory === category.name }"
-            @click="selectedCategory = category.name"
-            :disabled="loading"
-          >
-            {{ category.name }}
-          </button>
+          <template v-if="!searchQuery">
+            <button 
+              class="category-button" 
+              :class="{ active: selectedCategory === '' }"
+              @click="selectedCategory = ''"
+              :disabled="loading"
+            >
+              전체
+            </button>
+            <button 
+              v-for="category in categories" 
+              :key="category.id"
+              class="category-button"
+              :class="{ active: selectedCategory === category.name }"
+              @click="selectedCategory = category.name"
+              :disabled="loading"
+            >
+              {{ category.name }}
+            </button>
+          </template>
+          <template v-else>
+            <span class="search-result-label">검색결과</span>
+          </template>
         </div>
         <select v-model="sortBy" class="filter-select" :disabled="loading">
           <option value="pub_date">최신순</option>
@@ -216,14 +221,14 @@ export default {
       sortBy,
       handlePageChange,
       navigateToDetail,
-      username
+      username,
+      searchQuery
     }
   }
 }
 </script>
 
 <style scoped>
-/* 기존 스타일 유지 */
 .book-list-page {
   min-height: 100vh;
   display: flex;
@@ -301,6 +306,17 @@ export default {
 .category-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.search-result-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1976d2;
+  padding: 0.5rem 1.2rem;
+  background: #f3f7fa;
+  border-radius: 20px;
+  margin-right: 1rem;
+  letter-spacing: 0.02em;
 }
 
 .filter-select {
