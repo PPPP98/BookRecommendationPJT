@@ -147,6 +147,26 @@
         </div>
 
         <div class="form-group">
+          <label for="profile-image">프로필 이미지</label>
+          <div class="profile-image-upload">
+            <input
+              type="file"
+              id="profile-image"
+              @change="handleImageUpload"
+              accept="image/jpeg,image/png,image/gif"
+              class="form-input"
+            />
+            <img 
+              v-if="imagePreview" 
+              :src="imagePreview" 
+              class="image-preview" 
+              alt="프로필 이미지 미리보기"
+            />
+            <p class="help-text">최대 3MB, jpg/jpeg/png/gif 파일만 가능</p>
+          </div>
+        </div>
+
+        <div class="form-group">
           <label for="bio">자기소개</label>
           <textarea
             id="bio"
@@ -215,6 +235,39 @@ export default {
     const authStore = useAuthStore()
     const router = useRouter()
     
+    // 이미지 관련 상태
+    const profileImage = ref(null)
+    const imagePreview = ref(null)
+
+    // 이미지 업로드 처리 함수
+    const handleImageUpload = (event) => {
+      const file = event.target.files[0]
+      if (!file) return
+
+      // 파일 크기 검증 (3MB)
+      if (file.size > 3 * 1024 * 1024) {
+        showMessage('이미지 크기는 3MB를 초과할 수 없습니다.')
+        event.target.value = ''
+        return
+      }
+
+      // 파일 형식 검증
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+      if (!allowedTypes.includes(file.type)) {
+        showMessage('지원하지 않는 이미지 형식입니다. (jpg, jpeg, png, gif만 가능)')
+        event.target.value = ''
+        return
+      }
+
+      // 이미지 미리보기
+      profileImage.value = file
+      const reader = new FileReader()
+      reader.onload = e => {
+        imagePreview.value = e.target.result
+      }
+      reader.readAsDataURL(file)
+    }
+
     // 모달 상태 관리
     const showSuccessModal = ref(false)
 
@@ -413,21 +466,29 @@ export default {
           return category ? category.id : null
         }).filter(id => id !== null)
 
-        const signupData = {
-          username: username.value,
-          email: email.value,
-          nickname: nickname.value,
-          password1: password.value,
-          password2: passwordConfirm.value,
-          interested_categories: selectedCategoryIds
+        const formData = new FormData()
+        formData.append('username', username.value)
+        formData.append('email', email.value)
+        formData.append('nickname', nickname.value)
+        formData.append('password1', password.value)
+        formData.append('password2', passwordConfirm.value)
+        
+        // 프로필 이미지가 있는 경우에만 추가
+        if (profileImage.value) {
+          formData.append('profile_image', profileImage.value)
         }
         
         // bio가 있는 경우에만 추가
         if (bio.value) {
-          signupData.bio = bio.value
+          formData.append('bio', bio.value)
         }
+
+        // 관심 카테고리 추가
+        selectedCategoryIds.forEach(id => {
+          formData.append('interested_categories', id)
+        })
         
-        await authStore.signup(signupData)
+        await authStore.signup(formData)
         // 성공 모달 표시
         showSuccessModal.value = true
       } catch (error) {
@@ -487,7 +548,9 @@ export default {
       passwordValidation,
       showSuccessModal,
       goToLogin,
-      goToMain
+      goToMain,
+      handleImageUpload,
+      imagePreview
     }
   }
 }
@@ -673,6 +736,26 @@ h1 {
 .status-message.error {
   background: #f8d7da;
   color: #721c24;
+}
+
+.profile-image-upload {
+  margin-top: 0.5rem;
+}
+
+.profile-image-upload input[type="file"] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.image-preview {
+  max-width: 200px;
+  max-height: 200px;
+  margin: 0.5rem 0;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 모달 버튼 스타일 */

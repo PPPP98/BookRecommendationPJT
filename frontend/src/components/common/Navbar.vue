@@ -56,7 +56,7 @@
               class="profile-image"
               @error="onImgError"
             >
-            <span class="username">{{ user?.username }}</span>
+            <span class="username">{{ user?.nickname }}</span>
             <div v-if="showDropdown" class="dropdown-menu" @keydown.tab="handleTabKey">
               <router-link to="/mypage" class="dropdown-item" aria-label="마이페이지로 이동">마이페이지</router-link>
               <router-link to="/mypage/likes" class="dropdown-item" aria-label="찜한 도서 페이지로 이동">찜한 도서</router-link>
@@ -88,7 +88,7 @@ const router = useRouter()
 const searchQuery = ref('')
 const showDropdown = ref(false)
 const suggestions = ref([])
-const defaultProfile = '/default-profile.png'
+const defaultProfile = '/default-profile.png.jpg'
 let timer = null
 
 function onInput() {
@@ -168,7 +168,10 @@ function handleLogout() {
 }
 
 function onImgError(e) {
-  if (!e.target.src.endsWith(defaultProfile)) {
+  const currentSrc = e.target.src
+  const defaultProfileUrl = window.location.origin + defaultProfile
+  
+  if (currentSrc !== defaultProfileUrl) {
     e.target.src = defaultProfile
   }
 }

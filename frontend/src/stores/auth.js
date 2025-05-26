@@ -9,7 +9,8 @@ export const useAuthStore = defineStore('auth', () => {
     id: null,
     username: null,
     email: null,
-    // 필요하다면 nickname, profile_image 등도 추가
+    nickname: null,
+    profile_image: null
   })
   const accessToken = ref(null)
   const refreshToken = ref(null)
@@ -36,14 +37,20 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // 회원가입
-  const signup = async (payload) => {
+  const signup = async (formData) => {
     try {
-      const response = await axios.post('/api/accounts/registration/', payload)
+      const response = await axios.post('/api/accounts/registration/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      })
       if (response.data.user) {
         user.value = {
-          id: response.data.user.pk,
+          id: response.data.user.pk || response.data.user.id,
           username: response.data.user.username,
-          email: response.data.user.email
+          email: response.data.user.email,
+          nickname: response.data.user.nickname,
+          profile_image: response.data.user.profile_image
         }
         localStorage.setItem('user', JSON.stringify(user.value))
       }
@@ -85,10 +92,16 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await axios.post('/api/accounts/login/', payload)
       const { access, refresh, user: userData } = response.data
       if (access && userData) {
-        user.value = userData
+        user.value = {
+          id: userData.pk || userData.id,
+          username: userData.username,
+          email: userData.email,
+          nickname: userData.nickname,
+          profile_image: userData.profile_image
+        }
         accessToken.value = access
         refreshToken.value = refresh || null
-        localStorage.setItem('user', JSON.stringify(userData))
+        localStorage.setItem('user', JSON.stringify(user.value))
         localStorage.setItem('access_token', access)
         if (refresh) {
           localStorage.setItem('refresh_token', refresh)
@@ -122,6 +135,8 @@ export const useAuthStore = defineStore('auth', () => {
       id: null,
       username: null,
       email: null,
+      nickname: null,
+      profile_image: null
     }
     accessToken.value = null
     refreshToken.value = null
