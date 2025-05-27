@@ -415,15 +415,28 @@ export default {
   margin-bottom: 2.2rem;
 }
 .thread-list-item {
-  margin-bottom: 0.6rem;
+  background: #f8f9fa;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.8rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.thread-list-item:hover {
+  background: #f1f3f5;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
 }
 .thread-title-link {
   color: #1976d2;
   font-weight: 600;
   text-decoration: none;
+  display: block;
+  font-size: 1.02rem;
 }
 .thread-title-link:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  color: #1565c0;
 }
 .empty-state {
   color: #888;

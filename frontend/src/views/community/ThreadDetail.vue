@@ -1,7 +1,7 @@
 <template>
   <div class="thread-detail-page">
     <main class="main-content" v-if="thread">
-      <!-- 책 이미지 + 제목/저자 가로 배치 -->
+      <!-- 책 정보 섹션 -->
       <section class="book-thread-top">
         <img
           class="book-cover-large"
@@ -15,35 +15,40 @@
         </div>
       </section>
 
-      <!-- 스레드 메타 및 액션 -->
-      <section class="thread-header-row">
-        <div class="thread-meta-info">
-          <img
-            class="author-image"
-            :src="thread.user?.profile_image || fallbackProfile"
-            :alt="thread.user?.nickname || thread.user?.username"
-            @error="onProfileImgError"
-          />
-          <span class="author-name">{{ thread.user?.nickname || thread.user?.username }}</span>
-          <span class="thread-date">{{ formattedDate }}</span>
+      <!-- 스레드 컨텐츠 카드 -->
+      <div class="thread-content-card">
+        <!-- 작성자 정보 -->
+        <ThreadHeaderInfo
+          :profile-image="thread.user?.profile_image"
+          :nickname="thread.user?.nickname"
+          :username="thread.user?.username"
+          :date="formattedDate"
+          :user-id="thread.user?.id || thread.user?.pk"
+          :fallback-profile="fallbackProfile"
+          @profile-img-error="onProfileImgError"
+        />
+
+        <!-- 스레드 본문 -->
+        <div class="thread-content">
+          <p>{{ thread.content }}</p>
         </div>
+        
+        <!-- 좋아요 버튼 -->
         <div class="thread-actions">
-          <button class="like-button" :class="{ liked: isLiked }" @click="toggleLike" :disabled="likeLoading">
+          <button 
+            class="like-button" 
+            :class="{ liked: isLiked }" 
+            @click="toggleLike" 
+            :disabled="likeLoading"
+          >
             <span v-if="isLiked">❤️</span>
             <span v-else>🤍</span>
             {{ thread.like_count }}
           </button>
         </div>
-      </section>
+      </div>
 
-      <!-- 스레드 본문 -->
-      <section>
-        <div class="thread-content">
-          <p>{{ thread.content }}</p>
-        </div>
-      </section>
-
-      <!-- 댓글 목록 -->
+      <!-- 댓글 섹션 -->
       <section class="comments-section">
         <CommentSection
           :comments="thread.comments"
@@ -81,13 +86,15 @@ import axios from 'axios'
 import Footer from '@/components/common/Footer.vue'
 import ErrorPage from '@/components/common/ErrorPage.vue'
 import CommentSection from '@/components/comment/CommentSection.vue'
+import ThreadHeaderInfo from '@/components/thread/ThreadHeaderInfo.vue'
 import { useAuthStore } from '@/stores/auth'
 export default {
   name: 'ThreadDetailPage',
   components: {
     Footer,
     ErrorPage,
-    CommentSection
+    CommentSection,
+    ThreadHeaderInfo
   },
   props: {
     id: {
@@ -324,6 +331,27 @@ export default {
   margin-top: 0.6rem;
 }
 
+/* 스레드 컨텐츠 카드 */
+.thread-content-card {
+  background: var(--color-card);
+  border-radius: 14px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 12px rgba(182,176,159,0.12);
+  border: 1.5px solid var(--color-border);
+}
+.thread-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 2rem;
+  margin: 1rem 0;
+  color: var(--color-text);
+  font-size: 1.18rem;
+  line-height: 1.7;
+  box-shadow: 0 2px 8px rgba(182,176,159,0.07);
+  border: 1.5px solid #e0e0e0;
+}
+
 /* 스레드 메타/액션 */
 .thread-header-row {
   display: flex;
@@ -355,19 +383,23 @@ export default {
 }
 .thread-actions {
   display: flex;
-  gap: 0.7rem;
-  align-items: center;
+  justify-content: flex-end;
+  margin-top: 1rem;
 }
 .like-button {
-  background: var(--color-bg);
+  background: #fff;
   border: 1.5px solid var(--color-border);
   color: var(--color-accent);
   font-size: 1.13rem;
-  border-radius: 6px;
-  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  padding: 0.7rem 1.5rem;
   cursor: pointer;
   font-weight: 600;
-  transition: background 0.13s, color 0.13s, border 0.13s;
+  transition: all 0.2s ease;
+}
+.like-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(182,176,159,0.15);
 }
 .like-button.liked {
   background: #fff0f0;
@@ -375,24 +407,12 @@ export default {
   border-color: #dc3545;
 }
 
-/* 본문 */
-.thread-content {
-  background: #fff;
-  border-radius: 10px;
-  padding: 1.6rem 1.4rem;
-  margin-bottom: 2.5rem;
-  color: var(--color-text);
-  font-size: 1.18rem;
-  line-height: 1.7;
-  box-shadow: 0 2px 8px rgba(182,176,159,0.07);
-  border: 1.5px solid #e0e0e0;
-}
-
 /* 댓글 영역 */
 .comments-section {
   margin-top: 3rem;
 }
 
+/* 미디어 쿼리 업데이트 */
 @media (max-width: 900px) {
   .main-content {
     padding: 1rem;
@@ -411,8 +431,12 @@ export default {
     margin-top: 0.2rem;
     align-items: center;
   }
+  .thread-content-card {
+    padding: 1rem;
+  }
+  
   .thread-content {
-    padding: 1rem 0.5rem;
+    padding: 1.5rem 1rem;
   }
 }
 </style>

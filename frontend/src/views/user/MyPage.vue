@@ -17,7 +17,12 @@
           <div class="sidebar-profile-title">
             {{ profile.nickname || "Book Community" }}
           </div>
-          <button class="sidebar-theme-btn" @click="goToEditProfile">정보 수정하기</button>
+          <button v-if="isOwnProfile" class="sidebar-theme-btn" @click="goToEditProfile">
+            정보 수정하기
+          </button>
+          <button v-else class="sidebar-theme-btn" :class="{ 'following': profile.is_following }" @click="toggleFollow(profile)">
+            {{ profile.is_following ? '팔로잉' : '팔로우' }}
+          </button>
         </div>
         <div class="sidebar-links-row">
           <div>
@@ -118,9 +123,10 @@
 
         <!-- 팔로잉 목록 -->
         <div v-else-if="!isEditing && activeTab === 'following'" class="user-list-grid">
-          <div
+          <router-link
             v-for="user in followings"
             :key="user.id"
+            :to="{ name: 'UserProfile', params: { id: user.id }}"
             class="user-card"
           >
             <div class="user-card-content">
@@ -131,7 +137,7 @@
               />
               <div class="user-info">
                 <h3 class="user-nickname">{{ user.nickname }}</h3>
-                <p class="user-bio">{{ user.bio || "자기소개가 없습니다" }}</p>
+
               </div>
               <button 
                 class="follow-btn" 
@@ -141,14 +147,15 @@
                 {{ user.is_following ? '팔로잉' : '팔로우' }}
               </button>
             </div>
-          </div>
+          </router-link>
         </div>
 
         <!-- 팔로워 목록 -->
         <div v-else-if="!isEditing && activeTab === 'followers'" class="user-list-grid">
-          <div
+          <router-link
             v-for="user in followers"
             :key="user.id"
+            :to="{ name: 'UserProfile', params: { id: user.id }}"
             class="user-card"
           >
             <div class="user-card-content">
@@ -159,7 +166,7 @@
               />
               <div class="user-info">
                 <h3 class="user-nickname">{{ user.nickname }}</h3>
-                <p class="user-bio">{{ user.bio || "자기소개가 없습니다" }}</p>
+
               </div>
               <button 
                 class="follow-btn" 
@@ -169,7 +176,7 @@
                 {{ user.is_following ? '팔로잉' : '팔로우' }}
               </button>
             </div>
-          </div>
+          </router-link>
         </div>
 
         <button 
@@ -257,14 +264,19 @@ export default {
       } else {
         return this.hasMore;
       }
+    },
+    userId() {
+      return this.$route.params.id || null;
+    },
+    isOwnProfile() {
+      return !this.userId;
     }
   },
   mounted() {
-    Promise.all([
-      this.fetchProfile(),
-      this.fetchCategories(),
-      this.fetchSidebarLinks()
-    ]).then(() => {
+    // 최초 마운트 시 모든 필요한 데이터 로드
+    this.fetchCategories();
+    this.fetchSidebarLinks();
+    this.fetchProfile().then(() => {
       // 프로필 정보가 로드된 후 관련 데이터 로드
       if (this.profile.id) {
         if (this.activeTab === 'following') {
@@ -290,6 +302,25 @@ export default {
       } else {
         this.fetchBooks(true);
       }
+    },
+    // $route 변경을 감시하는 watcher 추가
+    '$route'(to, from) {
+      // 같은 컴포넌트의 다른 유저 프로필로 이동할 때만 데이터 새로 불러오기
+      if (to.name === from.name && to.params.id !== from.params.id) {
+        this.fetchProfile().then(() => {
+          if (this.profile.id) {
+            if (this.activeTab === 'following') {
+              this.fetchFollowings(true);
+            } else if (this.activeTab === 'followers') {
+              this.fetchFollowers(true);
+            } else if (this.activeTab === 'liked') {
+              this.fetchLikedBooks(true);
+            } else {
+              this.fetchBooks(true);
+            }
+          }
+        });
+      }
     }
   },
   methods: {
@@ -304,7 +335,11 @@ export default {
     },
     async fetchProfile() {
       try {
-        const { data } = await axios.get("/api/accounts/profile/");
+        const endpoint = this.userId 
+          ? `/api/accounts/${this.userId}/profile/`
+          : "/api/accounts/profile/";
+        
+        const { data } = await axios.get(endpoint);
         this.profile = {
           id: data.id,
           username: data.username,
@@ -457,7 +492,7 @@ export default {
       try {
         if (user.is_following) {
           // 언팔로우 API 호출
-          await axios.delete(`/api/accounts/${user.id}/follow/`);
+          await axios.post(`/api/accounts/${user.id}/follow/`);
         } else {
           // 팔로우 API 호출
           await axios.post(`/api/accounts/${user.id}/follow/`);
@@ -798,6 +833,9 @@ export default {
   overflow: hidden;
   padding: 1rem;
   transition: box-shadow 0.15s, transform 0.11s;
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
 .user-card:hover {
@@ -842,30 +880,33 @@ export default {
 }
 
 .follow-btn {
-  background: #f5f6fa;
-  color: #7c3aed;
-  border: 1.5px solid #ececec;
+  background: #7c3aed;
+  color: #fff;
+  border: 1.5px solid #7c3aed;
   border-radius: 16px;
   padding: 0.4em 1.3em;
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: background 0.16s, color 0.16s;
+  transition: all 0.2s ease;
 }
 
 .follow-btn:hover {
-  background: #ece9fd;
-  color: #5b21b6;
+  background: #6b21e8;
+  border-color: #6b21e8;
+  transform: translateY(-1px);
 }
 
 .follow-btn.following {
-  background: #7c3aed;
-  color: #fff;
+  background: transparent;
+  color: #7c3aed;
   border-color: #7c3aed;
 }
 
 .follow-btn.following:hover {
-  background: #6b21e8;
+  background: #ece9fd;
+  color: #5b21b6;
+  border-color: #5b21b6;
 }
 
 .dashboard-load-more {

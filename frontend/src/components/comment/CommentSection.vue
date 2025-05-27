@@ -21,13 +21,13 @@
       @delete-comment="onDeleteComment"
       @open-detail="onOpenDetail"
     />
-    <CommentDetailModal
+    <!-- <CommentDetailModal
       v-if="showCommentDetail"
       :comment="selectedCommentDetail"
       :loading="commentDetailLoading"
       :error="commentDetailError"
       @close="$emit('close-detail')"
-    />
+    /> -->
   </div>
 </template>
 <script>
@@ -58,3 +58,13 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.comments-section {
+  background-color: rgba(238, 238, 238, 0.755);
+  border-radius: 12px;
+  margin: 2rem 0;
+  padding: 20px;
+}
+
+</style>
