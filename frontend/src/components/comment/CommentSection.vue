@@ -1,3 +1,4 @@
+<!-- 댓글 전체 영역(섹션) -->
 <template>
   <div class="comments-section">
     <h2>댓글 ({{ comments?.length || 0 }})</h2>

@@ -1,64 +1,74 @@
 <template>
   <div class="thread-detail-page">
     <main class="main-content" v-if="thread">
-      <ThreadHeader
-        :thread="thread"
-        :fallback-profile="fallbackProfile"
-        :fallback-book-cover="fallbackBookCover"
-        :formatted-date="formattedDate"
-        @img-error="onProfileImgError"
-        @book-img-error="onBookImgError"
-      />
-      <ThreadActions
-        :thread="thread"
-        :is-liked="isLiked"
-        :like-loading="likeLoading"
-        :is-following="isFollowing"
-        :follow-loading="followLoading"
-        :is-mine="isMine"
-        :show-follow-button="showFollowButton"
-        @toggle-like="toggleLike"
-        @toggle-follow="toggleFollow"
-        @start-edit="startEdit"
-        @delete-thread="deleteThread"
-      />
-      <ThreadEditForm
-        v-if="editing"
-        :title="editTitle"
-        :content="editContent"
-        :loading="editLoading"
-        :error="editError"
-        @update:title="editTitle = $event"
-        @update:content="editContent = $event"
-        @submit="submitEdit"
-        @cancel="cancelEdit"
-      />
-      <div class="thread-content" v-else>
-        <p>{{ thread.content }}</p>
-      </div>
-      <CommentSection
-        :comments="thread.comments"
-        :user-id="userId"
-        :thread-id="thread.id"
-        @add-comment="addComment"
-        @edit-comment="submitEditComment"
-        @delete-comment="deleteComment"
-        @open-detail="openCommentDetail"
-        :comment-loading="commentLoading"
-        :edit-comment-loading="editCommentLoading"
-        :edit-comment-error="editCommentError"
-        :editing-comment-id="editingCommentId"
-        :edit-comment-content="editCommentContent"
-        @start-edit-comment="startEditComment"
-        @cancel-edit-comment="cancelEditComment"
-        :show-comment-detail="showCommentDetail"
-        :selected-comment-detail="selectedCommentDetail"
-        :comment-detail-loading="commentDetailLoading"
-        :comment-detail-error="commentDetailError"
-        @close-detail="showCommentDetail = false"
-        :new-comment="newComment"
-        @update:new-comment="newComment = $event"
-      />
+      <!-- 책 이미지 + 제목/저자 가로 배치 -->
+      <section class="book-thread-top">
+        <img
+          class="book-cover-large"
+          :src="thread.book?.cover || fallbackBookCover"
+          :alt="thread.book?.title"
+          @error="onBookImgError"
+        />
+        <div class="book-meta-block">
+          <div class="book-title">{{ thread.book?.title }}</div>
+          <div class="book-author">{{ thread.book?.author }}</div>
+        </div>
+      </section>
+
+      <!-- 스레드 메타 및 액션 -->
+      <section class="thread-header-row">
+        <div class="thread-meta-info">
+          <img
+            class="author-image"
+            :src="thread.user?.profile_image || fallbackProfile"
+            :alt="thread.user?.nickname || thread.user?.username"
+            @error="onProfileImgError"
+          />
+          <span class="author-name">{{ thread.user?.nickname || thread.user?.username }}</span>
+          <span class="thread-date">{{ formattedDate }}</span>
+        </div>
+        <div class="thread-actions">
+          <button class="like-button" :class="{ liked: isLiked }" @click="toggleLike" :disabled="likeLoading">
+            <span v-if="isLiked">❤️</span>
+            <span v-else>🤍</span>
+            {{ thread.like_count }}
+          </button>
+        </div>
+      </section>
+
+      <!-- 스레드 본문 -->
+      <section>
+        <div class="thread-content">
+          <p>{{ thread.content }}</p>
+        </div>
+      </section>
+
+      <!-- 댓글 목록 -->
+      <section class="comments-section">
+        <CommentSection
+          :comments="thread.comments"
+          :user-id="userId"
+          :thread-id="thread.id"
+          @add-comment="addComment"
+          @edit-comment="submitEditComment"
+          @delete-comment="deleteComment"
+          @open-detail="openCommentDetail"
+          :comment-loading="commentLoading"
+          :edit-comment-loading="editCommentLoading"
+          :edit-comment-error="editCommentError"
+          :editing-comment-id="editingCommentId"
+          :edit-comment-content="editCommentContent"
+          @start-edit-comment="startEditComment"
+          @cancel-edit-comment="cancelEditComment"
+          :show-comment-detail="showCommentDetail"
+          :selected-comment-detail="selectedCommentDetail"
+          :comment-detail-loading="commentDetailLoading"
+          :comment-detail-error="commentDetailError"
+          @close-detail="showCommentDetail = false"
+          :new-comment="newComment"
+          @update:new-comment="newComment = $event"
+        />
+      </section>
       <div v-if="error" class="error-state">{{ error }}</div>
     </main>
     <ErrorPage v-else type="loading" message="쓰레드를 불러오는 중입니다." />
@@ -70,20 +80,13 @@
 import axios from 'axios'
 import Footer from '@/components/common/Footer.vue'
 import ErrorPage from '@/components/common/ErrorPage.vue'
-import ThreadHeader from '@/components/thread/ThreadHeader.vue'
-import ThreadActions from '@/components/thread/ThreadActions.vue'
-import ThreadEditForm from '@/components/thread/ThreadEditForm.vue'
 import CommentSection from '@/components/comment/CommentSection.vue'
 import { useAuthStore } from '@/stores/auth'
-
 export default {
   name: 'ThreadDetailPage',
   components: {
     Footer,
     ErrorPage,
-    ThreadHeader,
-    ThreadActions,
-    ThreadEditForm,
     CommentSection
   },
   props: {
@@ -94,21 +97,13 @@ export default {
   },
   data() {
     return {
-      thread: null, // 반드시 선언!
+      thread: null,
       fallbackBookCover: 'https://cdn-icons-png.flaticon.com/512/29/29302.png',
       fallbackProfile: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
       isLiked: false,
       likeLoading: false,
-      isFollowing: false,
-      followLoading: false,
-      editing: false,
-      editTitle: '',
-      editContent: '',
-      editLoading: false,
-      editError: null,
       error: null,
       userId: null,
-      showFollowButton: false,
       // 댓글 관련
       newComment: '',
       commentLoading: false,
@@ -131,29 +126,12 @@ export default {
         month: 'long',
         day: 'numeric'
       }).format(date)
-    },
-    isMine() {
-      return (
-        this.thread &&
-        this.thread.user &&
-        this.userId !== null &&
-        String(this.userId) === String(this.thread.user.id || this.thread.user.pk)
-      )
-    },
-    showFollowButtonComputed() {
-      return (
-        this.thread &&
-        this.thread.user &&
-        this.userId !== null &&
-        String(this.userId) !== String(this.thread.user.id || this.thread.user.pk)
-      )
     }
   },
   methods: {
     async fetchThread() {
       try {
         const response = await axios.get(`/api/threads/${this.id}/`)
-        // 명세에 따라 모든 필드 그대로 할당
         this.thread = {
           ...response.data,
           book: response.data.book || {},
@@ -161,8 +139,6 @@ export default {
           comments: response.data.comments || []
         }
         this.isLiked = response.data.is_liked || false
-        this.isFollowing = response.data.is_followed || false
-        this.showFollowButton = this.showFollowButtonComputed
       } catch (err) {
         this.error = '쓰레드를 불러오는데 실패했습니다.'
         this.thread = null
@@ -185,78 +161,7 @@ export default {
         this.likeLoading = false
       }
     },
-    async toggleFollow() {
-      if (!this.thread?.user?.id) return
-      this.followLoading = true
-      try {
-        const token = localStorage.getItem('access_token')
-        const response = await axios.post(
-          `/api/accounts/${this.thread.user.id}/follow/`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        this.isFollowing = response.data.is_following
-      } finally {
-        this.followLoading = false
-      }
-    },
-    startEdit() {
-      this.editing = true
-      this.editTitle = this.thread.title
-      this.editContent = this.thread.content
-      this.editError = null
-    },
-    cancelEdit() {
-      this.editing = false
-      this.editTitle = ''
-      this.editContent = ''
-      this.editError = null
-    },
-    async submitEdit() {
-      if (!this.editTitle.trim() || !this.editContent.trim()) {
-        this.editError = '제목과 내용을 모두 입력하세요.'
-        return
-      }
-      this.editLoading = true
-      this.editError = null
-      try {
-        const token = localStorage.getItem('access_token')
-        const response = await axios.put(
-          `/api/threads/${this.thread.id}/update-delete/`,
-          {
-            title: this.editTitle,
-            content: this.editContent,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        )
-        this.thread.title = response.data.title
-        this.thread.content = response.data.content
-        this.editing = false
-        this.editTitle = ''
-        this.editContent = ''
-      } catch (err) {
-        this.editError = '수정에 실패했습니다.'
-      } finally {
-        this.editLoading = false
-      }
-    },
-    async deleteThread() {
-      if (!confirm('정말 삭제하시겠습니까?')) return
-      try {
-        const token = localStorage.getItem('access_token')
-        await axios.delete(`/api/threads/${this.thread.id}/update-delete/`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        this.$router.push('/community')
-      } catch (err) {
-        this.error = '삭제에 실패했습니다.'
-      }
-    },
-    // 댓글 관련 메서드 (paste.txt와 동일하게 유지, catch 블록 등도 포함)
+    // 댓글 관련 메서드 (paste.txt와 동일)
     async addComment(content) {
       if (!content.trim() || !this.thread) return
       this.commentLoading = true
@@ -301,22 +206,13 @@ export default {
         )
         const idx = this.thread.comments.findIndex(c => c.id === comment.id)
         if (idx !== -1) {
-          this.$set(this.thread.comments, idx, {
+          this.thread.comments[idx] = {
             ...this.thread.comments[idx],
             ...response.data
-          })
+          }
         }
         this.cancelEditComment()
       } catch (err) {
-        console.error('댓글 수정 에러:', err, err.response)
-        if (err && err.response) {
-          alert(
-            '댓글 수정 실패: ' +
-            (err.response.data?.detail || JSON.stringify(err.response.data) || err.message)
-          );
-        } else {
-          alert('댓글 수정 실패: 네트워크/알 수 없는 오류');
-        }
         this.editCommentError = '댓글 수정에 실패했습니다.'
       } finally {
         this.editCommentLoading = false
@@ -367,231 +263,156 @@ export default {
 </script>
 
 <style scoped>
-/* paste.txt의 기존 스타일 그대로 사용 */
+:root {
+  --color-bg: #F2F2F2;
+  --color-card: #EAE4D5;
+  --color-accent: #B6B09F;
+  --color-text: #000000;
+  --color-border: #B6B09F;
+  --color-error: #dc3545;
+}
+
 .thread-detail-page {
+  background: var(--color-bg);
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
 }
 .main-content {
   flex: 1;
-  padding: 2rem;
-  max-width: 800px;
+  padding: 2.5rem 1rem 2rem 1rem;
+  max-width: 900px;
   margin: 0 auto;
 }
-.thread-detail-page {
+
+/* 책 이미지 + 제목/저자 가로 배치 */
+.book-thread-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 2.2rem;
+  background: var(--color-card);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(182,176,159,0.07);
+  border: 1.5px solid var(--color-border);
+  padding: 2.1rem 2.6rem 2.1rem 2.6rem;
+  margin-bottom: 2.1rem;
+}
+.book-cover-large {
+  width: 210px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(182,176,159,0.10);
+}
+.book-meta-block {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-top: 1.2rem;
 }
-.main-content {
-  flex: 1;
-  padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
+.book-title {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--color-text);
 }
-.thread-header {
-  margin-bottom: 2rem;
+.book-author {
+  font-size: 1.15rem;
+  color: var(--color-accent);
+  font-weight: 500;
+  margin-top: 0.6rem;
 }
-.author-info {
+
+/* 스레드 메타/액션 */
+.thread-header-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  color: #666;
-  margin-top: 0.5rem;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
 }
-.author-link {
+.thread-meta-info {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  color: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  transition: color 0.15s;
-}
-.author-link:hover .author-name {
-  text-decoration: underline;
-  color: #1976d2;
+  gap: 0.7rem;
 }
 .author-image {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
   background: #efefef;
 }
-.book-info {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 2rem;
+.author-name {
+  font-weight: 600;
+  color: var(--color-accent);
+  font-size: 1.09rem;
 }
-.book-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 0.5rem;
-}
-.book-detail {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-.book-cover {
-  width: 80px;
-  height: 110px;
-  object-fit: cover;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  background: #fff;
-}
-.book-meta {
-  flex: 1;
-}
-.book-author {
-  margin-bottom: 0.5rem;
-  color: #444;
-}
-.rating {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-.stars {
-  color: #f0ad4e;
-}
-.thread-content {
-  font-size: 1.1rem;
-  line-height: 1.6;
-  margin-bottom: 2rem;
+.thread-date {
+  font-size: 0.98rem;
+  color: #888;
+  margin-left: 0.7rem;
 }
 .thread-actions {
-  margin-bottom: 2rem;
   display: flex;
-  gap: 1rem;
+  gap: 0.7rem;
   align-items: center;
 }
 .like-button {
-  background: none;
-  border: 1px solid #ddd;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-accent);
+  font-size: 1.13rem;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
   cursor: pointer;
+  font-weight: 600;
+  transition: background 0.13s, color 0.13s, border 0.13s;
 }
-.follow-button {
-  background: #1976d2;
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1.1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background 0.18s;
+.like-button.liked {
+  background: #fff0f0;
+  color: #dc3545;
+  border-color: #dc3545;
 }
-.follow-button.following {
-  background: #f8f9fa;
-  color: #1976d2;
-  border: 1.5px solid #1976d2;
+
+/* 본문 */
+.thread-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.6rem 1.4rem;
+  margin-bottom: 2.5rem;
+  color: var(--color-text);
+  font-size: 1.18rem;
+  line-height: 1.7;
+  box-shadow: 0 2px 8px rgba(182,176,159,0.07);
+  border: 1.5px solid #e0e0e0;
 }
-.follow-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.edit-button {
-  background-color: #ffc107;
-  color: #333;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.edit-button:hover {
-  background-color: #e0a800;
-}
-.delete-button {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.edit-form {
-  margin: 2rem 0;
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 8px;
-}
-.edit-actions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-.submit-btn {
-  background: #0066cc;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.cancel-btn {
-  background: #f8f9fa;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-}
+
+/* 댓글 영역 */
 .comments-section {
   margin-top: 3rem;
 }
-.comment-form {
-  margin-bottom: 2rem;
-}
-.comment-form textarea {
-  width: 100%;
-  height: 100px;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-}
-.comment-form button {
-  background: #0066cc;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.comment-form button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-.comments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.comment {
-  padding: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-.comment-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-.comment-author {
-  font-weight: bold;
-}
-.comment-date {
-  color: #666;
-  font-size: 0.9rem;
-}
-.error-state {
-  color: #dc3545;
-  margin-top: 1rem;
-  text-align: center;
+
+@media (max-width: 900px) {
+  .main-content {
+    padding: 1rem;
+  }
+  .book-thread-top {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 1.1rem 0.7rem;
+  }
+  .book-cover-large {
+    width: 130px;
+    height: 180px;
+  }
+  .book-meta-block {
+    margin-top: 0.2rem;
+    align-items: center;
+  }
+  .thread-content {
+    padding: 1rem 0.5rem;
+  }
 }
 </style>

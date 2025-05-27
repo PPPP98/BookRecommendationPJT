@@ -134,12 +134,14 @@ export default {
       ''
     )
 
+    // NavBar와 동일하게 사용자 프로필 이미지 처리
     const userProfileImage = computed(() => {
       const img = user.value?.profile_image
       if (!img) return CDN_PROFILE
       if (img.startsWith('http')) return img
       return `${BACKEND_URL}${img}`
     })
+
     function onImgError(e) {
       if (e.target.src !== CDN_PROFILE) {
         e.target.src = CDN_PROFILE
@@ -313,6 +315,7 @@ export default {
   font-size: 0.9rem;
   transition: all 0.2s ease;
 }
+
 .category-button:hover:not(:disabled) {
   background: #f0f0f0;
   border-color: #ccc;
@@ -322,6 +325,7 @@ export default {
   color: white;
   border-color: #0066cc;
 }
+
 .category-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -409,6 +413,38 @@ export default {
 .pagination-info {
   font-size: 0.9rem;
   color: #666;
+}
+
+::v-deep .title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.3em;
+  min-height: 2.6em;
+  max-height: 2.6em;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 0.5rem;
+}
+
+.title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;         /* 2줄까지만 보임 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.3em;            /* 줄간격 */
+  min-height: 2.6em;             /* 항상 두 줄 공간 확보 */
+  max-height: 2.6em;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 0.5rem;
 }
 
 @keyframes spin {
