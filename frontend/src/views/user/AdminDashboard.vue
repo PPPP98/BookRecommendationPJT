@@ -9,7 +9,6 @@
 -->
 <template>
   <div class="admin-dashboard">
-    <Navbar />
     
     <main class="main-content">
       <div class="dashboard-header">
@@ -112,7 +111,6 @@
 
 <script>
 import { computed } from 'vue'
-import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
 import { books } from '@/mocks/books'
 import { users } from '@/mocks/users'
@@ -120,7 +118,6 @@ import { users } from '@/mocks/users'
 export default {
   name: 'AdminDashboard',
   components: {
-    Navbar,
     Footer
   },
   data() {

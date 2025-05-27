@@ -1,8 +1,5 @@
 <template>
   <div class="book-home">
-    <!-- 네비게이션 바 (상단 고정) -->
-    <navbar/>
-
     <!-- 메인 카드 그리드 -->
     <main class="main-grid">
       <!-- 왼쪽: Book Club Episodes -->
@@ -153,9 +150,7 @@
 </template>
 
 <script>
-import Navbar from '@/components/common/Navbar.vue'
 export default {
-  components: { Navbar }
 }
 </script>
 

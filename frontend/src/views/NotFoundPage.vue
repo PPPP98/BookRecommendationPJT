@@ -4,7 +4,6 @@
 -->
 <template>
   <div class="not-found-page">
-    <Navbar />
     
     <main class="main-content">
       <div class="error-container">
@@ -23,13 +22,11 @@
 </template>
 
 <script>
-import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
 
 export default {
   name: 'NotFoundPage',
   components: {
-    Navbar,
     Footer
   }
 }

@@ -1,7 +1,5 @@
 <template>
   <div class="book-detail-page">
-    <Navbar />
-
     <main class="main-content" v-if="book">
       <div class="book-header">
         <img :src="book.cover" :alt="book.title" class="book-cover" />
@@ -99,14 +97,12 @@
 
 <script>
 import axios from 'axios'
-import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
 import ErrorPage from '@/components/common/ErrorPage.vue'
 
 export default {
   name: 'BookDetail',
   components: {
-    Navbar,
     Footer,
     ErrorPage
   },

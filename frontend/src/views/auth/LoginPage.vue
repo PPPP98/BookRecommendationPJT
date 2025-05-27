@@ -1,6 +1,5 @@
 <template>
   <div class="login-page">
-    <Navbar />
     <div class="login-container">
       <h1>로그인</h1>
       <form @submit.prevent="handleLogin" class="login-form">
@@ -64,11 +63,9 @@
 
 <script>
 import axios from "axios";
-import Navbar from '@/components/common/Navbar.vue'
 
 export default {
   name: "LoginPage",
-  components: { Navbar },
   data() {
     return {
       form: {

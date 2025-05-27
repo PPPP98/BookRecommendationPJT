@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <navbar />
     <router-view />
     <TopButton />
   </div>
@@ -7,6 +8,7 @@
 
 <script setup>
 import TopButton from '@/components/common/TopButton.vue'
+import Navbar from '@/components/common/Navbar.vue'
 </script>
 
 <style>

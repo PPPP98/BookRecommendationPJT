@@ -1,6 +1,5 @@
 <template>
   <div class="book-list-page">
-    <Navbar />
     <main class="main-content">
       <div class="profile-section">
         <img
@@ -97,7 +96,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
-import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
 import BookCard from '@/components/books/BookCard.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -109,7 +107,7 @@ const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 export default {
   name: 'BookList',
   components: {
-    Navbar,
+    Footer,
     Footer,
     BookCard
   },
