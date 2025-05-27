@@ -59,6 +59,9 @@
         <ul>
           <li v-for="thread in book.threads" :key="thread.id">
             <router-link :to="`/threads/${thread.id}`">{{ thread.title }}</router-link>
+            <span class="thread-author">({{ thread.comment_count }})</span>
+            <span class="thread-author">추천수: {{ thread.like_count }}</span>
+            <span class="thread-author">작성자: {{ thread.user.nickname }}</span>
           </li>
         </ul>
       </div>
