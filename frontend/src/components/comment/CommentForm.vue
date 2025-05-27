@@ -1,3 +1,4 @@
+<!-- 댓글 작성 폼 -->
 <template>
   <div class="comment-form">
     <textarea v-model="contentProxy" placeholder="댓글을 작성하세요"></textarea>

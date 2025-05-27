@@ -1,6 +1,10 @@
 <template>
-  <div class="book-like-list">
-    <div class="books-container">
+  <div class="recent-liked-books-section">
+    <div class="recent-liked-books-header">
+      <h3>최근 찜한 도서</h3>
+      <button class="summary-link" @click="$emit('more')">더보기</button>
+    </div>
+    <div class="books-container small horizontal-scroll">
       <BookCard
         v-for="book in books"
         :key="book.id"
@@ -16,6 +20,7 @@
 <script>
 import BookCard from './BookCard.vue'
 export default {
-  props: { books: Array }
+  props: { books: Array },
+  components: { BookCard }
 }
 </script>

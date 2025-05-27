@@ -1,3 +1,4 @@
+<!-- 댓글 목록 -->
 <template>
   <div class="comment" @click="$emit('open-detail', comment.id)">
     <div class="comment-header">
@@ -10,14 +11,16 @@
         <button class="comment-delete-btn" @click.stop="$emit('delete', comment)">삭제</button>
       </div>
     </div>
-    <!-- 댓글 수정 폼 -->
-    <div v-if="editing" class="comment-edit-form" @click.stop>
-      <textarea v-model="localEditContent" :disabled="editLoading" maxlength="1000" />
-      <div class="edit-actions">
-        <button class="save-btn" @click.stop="onEdit" :disabled="editLoading || !localEditContent.trim()">저장</button>
-        <button class="cancel-btn" @click.stop="$emit('cancel-edit')" :disabled="editLoading">취소</button>
+    <!-- 댓글 수정 폼: 모달처럼 화면 중앙에 크게 표시 -->
+    <div v-if="editing" class="comment-edit-modal-bg">
+      <div class="comment-edit-modal">
+        <textarea v-model="localEditContent" :disabled="editLoading" maxlength="1000" />
+        <div class="edit-actions">
+          <button class="save-btn" @click.stop="onEdit" :disabled="editLoading || !localEditContent.trim()">저장</button>
+          <button class="cancel-btn" @click.stop="$emit('cancel-edit')" :disabled="editLoading">취소</button>
+        </div>
+        <div v-if="editError" class="error-state">{{ editError }}</div>
       </div>
-      <div v-if="editError" class="error-state">{{ editError }}</div>
     </div>
     <!-- 댓글 본문 -->
     <p class="comment-content" v-else>{{ comment.content }}</p>
@@ -81,6 +84,8 @@ export default {
   transition: box-shadow 0.13s, border 0.13s;
   color: var(--color-text);
   cursor: pointer;
+  position: relative;
+  z-index: 1;
 }
 .comment:hover {
   box-shadow: 0 4px 16px rgba(182, 176, 159, 0.13);
@@ -132,69 +137,81 @@ export default {
   color: #dc3545;
   border-color: #dc3545;
 }
-.comment-edit-form {
-  margin-top: 0.5rem;
-  background: var(--color-bg);
-  border-radius: 7px;
-  padding: 0.8rem;
-  border: 1px solid var(--color-border);
+
+/* ====== 댓글 수정 모달 ====== */
+.comment-edit-modal-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.28);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.comment-edit-form textarea {
+.comment-edit-modal {
+  background: #f4f6f8;
+  border-radius: 16px;
+  border: 2px solid var(--color-accent);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+  padding: 2.5rem 2.4rem 2rem 2.4rem;
+  min-width: 380px;
+  max-width: 95vw;
+  width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  position: relative;
+}
+.comment-edit-modal textarea {
   width: 100%;
-  min-height: 60px;
-  font-size: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.7rem;
-  margin-bottom: 0.7rem;
+  min-height: 120px;
+  font-size: 1.2rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.1rem;
+  margin-bottom: 1.3rem;
   background: #fff;
   color: var(--color-text);
   resize: vertical;
   transition: border 0.13s;
+  box-sizing: border-box;
 }
-.comment-edit-form textarea:focus {
+.comment-edit-modal textarea:focus {
   border-color: var(--color-accent);
   outline: none;
 }
 .edit-actions {
   display: flex;
-  gap: 0.7rem;
+  gap: 1.2rem;
+  justify-content: flex-end;
+  margin-bottom: 0.6rem;
 }
-.save-btn {
-  background: var(--color-accent);
+.save-btn,
+.cancel-btn {
+  background: #000;
   color: #fff;
   border: none;
-  font-weight: 600;
-  border-radius: 4px;
-  padding: 0.4rem 1.2rem;
-  font-size: 0.97rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0.7rem 2.1rem;
+  font-size: 1.08rem;
   cursor: pointer;
   transition: background 0.13s;
 }
-.save-btn:disabled {
-  background: #ccc;
+.save-btn:disabled,
+.cancel-btn:disabled {
+  background: #888;
   color: #fff;
   cursor: not-allowed;
 }
-.cancel-btn {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  border-radius: 4px;
-  padding: 0.4rem 1.2rem;
-  font-size: 0.97rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.13s, border 0.13s;
-}
+.save-btn:hover,
 .cancel-btn:hover {
-  background: #fff;
-  border-color: var(--color-accent);
+  background: #222;
 }
 .error-state {
   color: var(--color-error);
   margin-top: 0.7rem;
-  font-size: 0.97rem;
+  font-size: 1.07rem;
   text-align: left;
 }
 .comment-content {
@@ -204,12 +221,16 @@ export default {
   white-space: pre-wrap;
   word-break: break-word;
 }
-@media (max-width: 600px) {
-  .comment {
-    padding: 1rem 0.7rem;
+@media (max-width: 700px) {
+  .comment-edit-modal {
+    min-width: 0;
+    width: 96vw;
+    padding: 1.2rem 0.6rem 1.1rem 0.6rem;
   }
-  .comment-edit-form {
-    padding: 0.5rem;
+  .comment-edit-modal textarea {
+    font-size: 1rem;
+    padding: 0.8rem;
+    min-height: 80px;
   }
 }
 </style>

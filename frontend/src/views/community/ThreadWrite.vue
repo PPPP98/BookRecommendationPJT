@@ -80,7 +80,6 @@ export default {
   },
   components: {
     Footer,
-    Navbar
   },
   data() {
     return {

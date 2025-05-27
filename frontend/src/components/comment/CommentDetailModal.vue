@@ -1,3 +1,4 @@
+<!-- 댓글 상세 모달 -->
 <template>
   <div class="modal-bg" @click.self="$emit('close')">
     <div class="modal-content">

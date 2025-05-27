@@ -415,6 +415,38 @@ export default {
   color: #666;
 }
 
+::v-deep .title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.3em;
+  min-height: 2.6em;
+  max-height: 2.6em;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 0.5rem;
+}
+
+.title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;         /* 2줄까지만 보임 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.3em;            /* 줄간격 */
+  min-height: 2.6em;             /* 항상 두 줄 공간 확보 */
+  max-height: 2.6em;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 0.5rem;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
