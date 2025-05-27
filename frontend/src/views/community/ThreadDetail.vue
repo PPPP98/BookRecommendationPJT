@@ -303,12 +303,14 @@ export default {
           { headers: { Authorization: `Bearer ${token}` } }
         )
         const idx = this.thread.comments.findIndex(c => c.id === comment.id)
-        if (idx !== -1) {
-          this.$set(this.thread.comments, idx, {
-            ...this.thread.comments[idx],
-            ...response.data
-          })
-        }
+if (idx !== -1) {
+  // Vue 3에서는 직접 할당!
+  this.thread.comments[idx] = {
+    ...this.thread.comments[idx],
+    ...response.data
+  }
+}
+
         this.cancelEditComment()
       } catch (err) {
         console.error('댓글 수정 에러:', err, err.response)

@@ -2,12 +2,34 @@
   <div class="thread-write-page">
     <Navbar />
     <main class="main-content">
-      <h1>새 글 작성</h1>
+      <h1>새 커뮤니티 글 작성</h1>
+
+      <!-- 선택 도서 정보 -->
       <div class="selected-book" v-if="selectedBook">
-        <strong>선택한 도서:</strong>
-        <span class="book-title">{{ selectedBook.title }} <small>({{ selectedBook.author }})</small></span>
+  <div class="book-info">
+    <img :src="selectedBook.cover" :alt="selectedBook.title" class="book-cover" />
+    <div>
+      <span class="book-title">{{ selectedBook.title }}</span>
+      <span class="book-author">({{ selectedBook.author }})</span>
+      <!-- 기존 평점 노출 -->
+      
+      <!-- 내가 매길 평점 (별점 선택) -->
+      <div class="user-rating-selector" @mouseleave="hoverRating = 0">
+        <span class="rating-label">내 평점</span>
+        <span v-for="score in 5" :key="score"
+          class="star"
+          :class="{ active: (hoverRating || thread.rating) >= score }"
+          @mouseover="hoverRating = score"
+          @click="thread.rating = score"
+        >&#9733;</span>
+        <span class="rating-value">{{ thread.rating }}/5</span>
       </div>
-      <form @submit.prevent="submitThread">
+    </div>
+  </div>
+</div>
+
+
+      <form class="thread-form" @submit.prevent="submitThread">
         <div class="form-group">
           <label for="title">제목</label>
           <input
@@ -15,36 +37,26 @@
             v-model="thread.title"
             type="text"
             required
-            placeholder="제목을 입력하세요"
+            maxlength="100"
+            placeholder="제목을 입력하세요 (최대 100자)"
           />
         </div>
-        <div class="form-group">
-          <label for="rating">평점</label>
-          <div class="rating-selector">
-            <div
-              v-for="score in 5"
-              :key="score"
-              class="star"
-              :class="{ active: thread.rating >= score }"
-              @click="thread.rating = score"
-            >⭐</div>
-            <span class="rating-value">{{ thread.rating }}/5</span>
-          </div>
-        </div>
+        
         <div class="form-group">
           <label for="content">내용</label>
           <textarea
             id="content"
             v-model="thread.content"
-            rows="10"
+            rows="8"
             required
-            placeholder="내용을 입력하세요"
+            maxlength="2000"
+            placeholder="책을 읽고 느낀 점, 감상, 추천 이유 등 자유롭게 작성해 주세요 (최대 2000자)"
           ></textarea>
         </div>
         <div class="form-actions">
           <button type="button" @click="$router.back()" class="cancel-btn">취소</button>
           <button type="submit" class="submit-btn" :disabled="!isFormValid || loading">
-            <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span v-if="loading" class="spinner"></span>
             등록
           </button>
         </div>
@@ -74,13 +86,14 @@ export default {
   },
   data() {
     return {
-      selectedBook: null, // 선택한 도서 정보
+      selectedBook: null,
       thread: {
         title: '',
         content: '',
         bookId: this.bookId,
         rating: 0
       },
+      hoverRating: 0,
       loading: false,
       error: null
     }
@@ -103,15 +116,11 @@ export default {
           this.$router.push('/auth/login')
           return
         }
-        // 선택한 도서 1개만 조회
         const response = await axios.get(`/api/books/${this.bookId}/`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         })
         this.selectedBook = response.data
       } catch (err) {
-        console.error('도서 정보 가져오기 실패:', err)
         if (err.response && err.response.status === 401) {
           this.$router.push('/auth/login')
         } else {
@@ -133,15 +142,11 @@ export default {
             rating: this.thread.rating
           },
           {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
+            headers: { Authorization: `Bearer ${token}` }
           }
         )
-        console.log('스레드 생성 성공:', response.data)
         this.$router.push('/community')
       } catch (error) {
-        console.error('스레드 생성 실패:', error)
         if (error.response) {
           this.error =
             error.response.data?.detail || '스레드 생성 중 오류가 발생했습니다.'
@@ -164,54 +169,108 @@ export default {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background: #f7f9fb;
 }
 .main-content {
   flex: 1;
-  padding: 2rem;
-  max-width: 800px;
+  padding: 2.5rem 1rem 2rem 1rem;
+  max-width: 600px;
   margin: 0 auto;
 }
 h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
   margin-bottom: 2rem;
+  letter-spacing: -0.01em;
+  color: #222;
 }
 .selected-book {
-  margin-bottom: 1.5rem;
-  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  background: #eef3fa;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 2rem;
 }
-.book-title {
-  color: #0066cc;
-  font-weight: bold;
+.selected-book .label {
+  font-weight: 600;
+  color: #1976d2;
+  font-size: 1rem;
+  margin-right: 0.7rem;
+}
+.selected-book .book-info {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.selected-book .book-cover {
+  width: 45px;
+  height: 62px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(25, 118, 210, 0.07);
+}
+.selected-book .book-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: #222;
+}
+.selected-book .book-author {
+  font-size: 0.95rem;
+  color: #666;
   margin-left: 0.5rem;
 }
+.thread-form {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+}
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.6rem;
 }
 label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: 500;
+  font-weight: 600;
+  color: #222;
+  font-size: 1rem;
 }
 input, textarea {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 0.8rem 1rem;
+  border: 1px solid #dde2e6;
+  border-radius: 6px;
   font-size: 1rem;
+  background: #fafbfc;
+  transition: border 0.15s;
+}
+input:focus, textarea:focus {
+  border-color: #1976d2;
+  outline: none;
 }
 .rating-selector {
   display: flex;
   align-items: center;
+  gap: 0.2rem;
+  font-size: 1.5rem;
+  user-select: none;
 }
 .star {
-  font-size: 1.5rem;
-  color: #ccc;
+  color: #e0e0e0;
   cursor: pointer;
+  transition: color 0.15s;
 }
 .star.active {
-  color: #f0ad4e;
+  color: #f7b500;
+  text-shadow: 0 1px 4px #ffecb3;
 }
 .rating-value {
   margin-left: 1rem;
+  font-size: 1rem;
+  color: #1976d2;
+  font-weight: 600;
 }
 .form-actions {
   display: flex;
@@ -220,32 +279,66 @@ input, textarea {
   margin-top: 2rem;
 }
 .cancel-btn {
-  padding: 0.75rem 1.5rem;
+  padding: 0.7rem 1.5rem;
   background: #f8f9fa;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #dde2e6;
+  border-radius: 6px;
+  color: #666;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s, border 0.15s;
+}
+.cancel-btn:hover {
+  background: #e3eaf3;
+  border-color: #b7c3d2;
 }
 .submit-btn {
-  padding: 0.75rem 1.5rem;
-  background: #0066cc;
+  padding: 0.7rem 1.5rem;
+  background: #1976d2;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s;
 }
 .submit-btn:disabled {
-  background: #ccc;
+  background: #bcd3ee;
   cursor: not-allowed;
 }
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #fff;
+  border-top: 2px solid #1976d2;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 .error {
   color: #dc3545;
-  margin-top: 1rem;
+  margin-top: 1.2rem;
   text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+}
+@media (max-width: 600px) {
+  .main-content {
+    padding: 1rem;
+  }
+  .thread-form {
+    padding: 1.2rem 0.5rem 1rem 0.5rem;
+  }
+  .selected-book {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.7rem 0.7rem;
+  }
 }
 </style>
