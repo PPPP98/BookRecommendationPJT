@@ -11,10 +11,10 @@
     <form @submit.prevent="handleLogin" class="login-form">
       <div class="input-group">
         <input 
-          type="email" 
-          id="email" 
-          v-model="email" 
-          placeholder="이메일"
+          type="text" 
+          id="username" 
+          v-model="username" 
+          placeholder="아이디"
           required
         />
       </div>
@@ -29,11 +29,18 @@
         />
       </div>
 
+      <!-- 오류 메시지 표시 -->
+      <div v-if="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
       <div class="password-options">
         <a href="#" class="forgot-password">비밀번호를 잊으셨나요?</a>
       </div>
 
-      <button type="submit" class="login-button">로그인</button>
+      <button type="submit" class="login-button" :disabled="isLoading">
+        {{ isLoading ? '로그인 중...' : '로그인' }}
+      </button>
       
       <div class="divider">또는</div>
       
@@ -55,23 +62,50 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../stores/auth';
 
-const email = ref('');
+const username = ref('');
 const password = ref('');
 const router = useRouter();
+const authStore = useAuthStore();
+const errorMessage = ref('');
+const isLoading = ref(false);
 
-const handleLogin = () => {
-  // 실제 로그인 로직은 여기에 구현
-  console.log('로그인 시도:', email.value, password.value);
-  // 성공 시 리다이렉트 로직 (임시)
-  // router.push('/dashboard');
+const handleLogin = async () => {
+  if (!username.value || !password.value) {
+    errorMessage.value = '아이디 비밀번호를 모두 입력해주세요.';
+    return;
+  }
+  
+  errorMessage.value = '';
+  isLoading.value = true;
+  
+  try {
+    // useAuthStore의 login 함수 호출
+    const payload = {
+      username: username.value,
+      password: password.value
+    };
+    
+    await authStore.login(payload);
+    console.log('로그인 성공:', authStore.user);
+    
+    // 로그인 후 폼 초기화
+    username.value = '';
+    password.value = '';
+  } catch (error) {
+    console.error('로그인 처리 중 오류:', error);
+    errorMessage.value = '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.';
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const goToSignup = () => {
   // 회원가입 페이지로 이동
-  router.push('/signup');
+  router.push('/auth/signup');
 };
 </script>
 
@@ -171,6 +205,24 @@ input:focus {
   background-color: #a79e8d;
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.login-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  text-align: center;
+  background-color: rgba(231, 76, 60, 0.1);
+  padding: 0.5rem;
+  border-radius: 5px;
+  border-left: 3px solid #e74c3c;
 }
 
 .divider {

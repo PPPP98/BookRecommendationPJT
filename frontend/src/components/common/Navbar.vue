@@ -209,20 +209,19 @@ onMounted(() => {
 
 <style scoped>
 .navbar {
-  background: #fff;
-  border-bottom: 1px solid #ececec;
-  padding: 0.7rem 0;
-  font-size: 1.07rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  height: var(--navbar-height);
+  width: 100%;
+  background: white;
 }
+
 .navbar-container {
+  max-width: 1200px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-  gap: 1.5rem;
 }
 .logo {
   font-size: 1.35rem;

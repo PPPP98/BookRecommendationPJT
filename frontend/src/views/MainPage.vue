@@ -1,137 +1,291 @@
 <template>
-  <div class="main-page">
-    <!-- 왼쪽 이미지 배경 -->
-    <ImageGrid />
+  <div 
+    :class="containerClasses"
+    @wheel.passive="handleWheel"
+    @touchstart="handleTouchStart"
+    @touchmove="handleTouchMove"
+    @keydown.down="nextPage"
+    @keydown.up="prevPage"
+    @scroll-to-first="handleScrollToFirst"
+    tabindex="0"
+    ref="container"
+    :data-page="currentPage"
+  >
+    <div class="pages-wrapper">
+      <FirstPage 
+        :data-active="currentPage === 0"
+        :data-prev="currentPage > 0"
+        :data-next="currentPage < 0"
+      />
+      <SecondPage 
+        :data-active="currentPage === 1"
+        :data-prev="currentPage > 1"
+        :data-next="currentPage < 1"
+        :goToFirstPage="() => goToPage(0)"
+      />
+      <ThirdPage 
+        :data-active="currentPage === 2"
+        :data-prev="currentPage > 2"
+        :data-next="currentPage < 2"
+      />
+      <FourthPage 
+        :data-active="currentPage === 3"
+        :data-prev="currentPage > 3"
+        :data-next="currentPage < 3"
+      />
+    </div>
     
-    <!-- 오른쪽 로그인 컨테이너 -->
-    <div class="login-section" v-if="!isLoggedIn">
-      <LoginModal />
+    <div class="page-indicators">
+      <div 
+        v-for="index in totalPages" 
+        :key="index"
+        class="indicator"
+        :class="{ active: currentPage === index - 1 }"
+        @click="goToPage(index - 1)"
+      ></div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import ImageGrid from '../components/common/ImageGrid.vue';
-import LoginModal from '../components/user/LoginModal.vue';
+import FirstPage from './pages/FirstPage.vue'
+import SecondPage from './pages/SecondPage.vue'
+import ThirdPage from './pages/ThirdPage.vue'
+import FourthPage from './pages/FourthPage.vue'
+import { useAuthStore } from '../stores/auth'
 
-// 로그인 상태 체크 (실제로는 스토어나 API 호출로 구현)
-const isLoggedIn = ref(false);
+// Pinia 스토어에서 로그인 상태 가져오기
+const authStore = useAuthStore()
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
-// 실제 구현에서는 Pinia 스토어에서 로그인 상태를 가져옴
-// import { useAuthStore } from '../stores/auth'
-// const authStore = useAuthStore()
-// const isLoggedIn = computed(() => authStore.isLoggedIn)
+// 페이지 상태 관리
+const currentPage = ref(0)
+const isAnimating = ref(false)
+const totalPages = 4
+const container = ref(null)
+const touchStartY = ref(0)
+const moveDirection = ref('') // 'up' 또는 'down'
 
-// import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
-// import { Swiper, SwiperSlide } from 'swiper/vue'
-// import { Pagination, Navigation } from 'swiper/modules'
-// import 'swiper/css'
-// import 'swiper/css/pagination'
-// import 'swiper/css/navigation'
+// 페이지 컨테이너 클래스 계산
+const containerClasses = computed(() => ({
+  'main-container': true
+}))
 
-// const sectionItems = [1, 2, 3, 4, 5]
-// const sectionRefs = ref([])
-// const sectionRootRef = ref(null)
-// const swiperRef = ref(null)
+// 페이지 이동 함수
+const nextPage = () => {
+  if (isAnimating.value || currentPage.value >= totalPages - 1) return
+  
+  isAnimating.value = true
+  moveDirection.value = 'up'
+  setTimeout(() => { 
+    isAnimating.value = false
+    moveDirection.value = ''
+  }, 500)
+  currentPage.value++
+}
 
-// function setSectionRef(el, idx) {
-//   if (el) sectionRefs.value[idx] = el
-// }
+const prevPage = () => {
+  // 로그인 상태에서는 첫 번째 페이지로 이동하지 못하도록 함
+  if (isAnimating.value || currentPage.value <= 0 || (isAuthenticated.value && currentPage.value <= 1)) return
+  
+  isAnimating.value = true
+  moveDirection.value = 'down'
+  setTimeout(() => { 
+    isAnimating.value = false
+    moveDirection.value = ''
+  }, 500)
+  currentPage.value--
+}
 
-// let observer = null
-// let lastActiveIdx = -1
+const goToPage = (page) => {
+  if (isAnimating.value || page === currentPage.value) return
+  if (isAuthenticated.value && page === 0) return // 로그인 상태에서는 첫 페이지로 가지 못함
+  
+  isAnimating.value = true
+  setTimeout(() => { isAnimating.value = false }, 500)
+  currentPage.value = page
+}
 
-// onMounted(async () => {
-//   await nextTick()
-//   observer = new window.IntersectionObserver(
-//     (entries) => {
-//       let maxRatio = 0
-//       let maxIdx = -1
-//       entries.forEach((entry) => {
-//         const idx = sectionRefs.value.findIndex(el => el === entry.target)
-//         if (entry.intersectionRatio > 0.15 && entry.intersectionRatio > maxRatio) {
-//           maxRatio = entry.intersectionRatio
-//           maxIdx = idx
-//         }
-//       })
-//       if (maxIdx !== -1 && maxIdx !== lastActiveIdx && sectionRefs.value[maxIdx]) {
-//         lastActiveIdx = maxIdx
-//         sectionRefs.value[maxIdx].scrollIntoView({ behavior: 'smooth' })
-//       }
-//     },
-//     { threshold: [0.15] }
-//   )
-//   sectionRefs.value.filter(Boolean).forEach(el => observer.observe(el))
-// })
+// 휠 이벤트 처리
+const handleWheel = (e) => {
+  if (isAnimating.value) return
 
-// onBeforeUnmount(() => {
-//   if (observer) observer.disconnect()
-// })
+  if (e.deltaY > 0 && currentPage.value < totalPages - 1) {
+    // 아래로 스크롤
+    nextPage()
+  } else if (e.deltaY < 0 && currentPage.value > 0 && !(isAuthenticated.value && currentPage.value <= 1)) {
+    // 위로 스크롤 (로그인 상태에서는 첫 페이지로 가지 못함)
+    prevPage()
+  }
+}
 
-// // Swiper에서 마지막 슬라이드에서 아래로 넘길 때 카드 섹션으로 이동
-// function onSlideChange(swiper) {
-//   // Swiper의 실제 슬라이드 개수(루프 포함)에서 마지막 "실제" 슬라이드 index 계산
-//   // swiper.realIndex는 loop 모드에서도 실제 인덱스를 반환
-//   // swiper.slides.length는 루프 슬라이드 포함이므로, slidesPerView=1에서 3개면 3-1=2
-//   if (swiper.realIndex === swiper.slides.length - swiper.loopedSlides - 1) {
-//     // 마지막 슬라이드에서 아래로 넘기면
-//     if (sectionRootRef.value) {
-//       sectionRootRef.value.scrollIntoView({ behavior: 'smooth' })
-//     }
-//   }
-// }
+// 터치 이벤트 처리
+const handleTouchStart = (e) => {
+  touchStartY.value = e.touches[0].clientY
+}
+
+const handleTouchMove = (e) => {
+  if (isAnimating.value) return
+  
+  const touchEndY = e.touches[0].clientY
+  const diff = touchStartY.value - touchEndY
+  
+  // 위로 스와이프 (아래로 이동)
+  if (diff > 50 && currentPage.value < totalPages - 1) {
+    nextPage()
+    touchStartY.value = touchEndY
+  }
+  // 아래로 스와이프 (위로 이동)
+  else if (diff < -50 && currentPage.value > 0 && !(isAuthenticated.value && currentPage.value <= 1)) {
+    // 로그인 상태에서는 첫 페이지로 가지 못함
+    prevPage()
+    touchStartY.value = touchEndY
+  }
+}
+
+// FirstPage로 스크롤하는 이벤트 핸들러
+const handleScrollToFirst = (event) => {
+  if (event.detail.targetPage === 0) {
+    goToPage(0)
+  }
+}
+
+import { watch } from 'vue'
+
+// 로그인 상태 감시
+watch(isAuthenticated, (newValue) => {
+  if (newValue && currentPage.value === 0) {
+    nextPage()
+  }
+}, { immediate: true })
+
+onMounted(() => {
+  // 앱 초기화 시 인증 상태 복원
+  authStore.initializeAuth()
+  
+  // 키보드 포커스를 컨테이너에 설정
+  if (container.value) {
+    container.value.focus()
+  }
+})
+
 </script>
 
 <style scoped>
 /* Navbar sticky 옵션 */
 :global(.navbar) {
-  position: sticky;
+  position: fixed;
   top: 0;
   z-index: 100;
   background: #fff;
   width: 100vw;
   border-bottom: 1px solid #ececec;
+  height: var(--navbar-height);
 }
 
-.main-page {
-  position: relative;
+.main-container {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  display: flex;
-  background-color: white;
-  justify-content: center;
-  align-items: center;
 }
 
-.login-section {
-  position: absolute;
+.pages-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: visible;
+  padding-top: var(--navbar-height); /* navbar 높이만큼 패딩 추가 */
+}
+
+.pages-wrapper > * {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+  transform: translateY(100%);
+}
+
+/* 첫 번째 페이지는 항상 보임 */
+.pages-wrapper > *:first-child {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  z-index: 1;
+}
+
+/* 현재 페이지 표시 */
+.pages-wrapper > *[data-active="true"] {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  z-index: 2;
+}
+
+/* 이전 페이지 */
+.pages-wrapper > *[data-prev="true"] {
+  opacity: 0;
+  transform: translateY(-100%);
+  z-index: 1;
+}
+
+/* 다음 페이지 */
+.pages-wrapper > *[data-next="true"] {
+  opacity: 0;
+  transform: translateY(100%);
+  z-index: 1;
+}
+
+.page-indicators {
+  position: fixed;
+  right: 20px;
   top: 50%;
-  right: 10%;
   transform: translateY(-50%);
-  width: 30%;
-  max-width: 450px;
-  z-index: 20;
-  background-color: transparent; /* 투명 배경으로 변경 */
-  border-radius: 10px;
-  padding: 0; /* 패딩 제거 */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 100;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  backdrop-filter: blur(5px);
 }
 
-@media (max-width: 1200px) {
-  .login-section {
-    width: 40%;
-  }
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicator.active {
+  background-color: white;
+  transform: scale(1.2);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 @media (max-width: 768px) {
-  .main-page {
-    flex-direction: column;
+  .main-container {
+    touch-action: none; /* 모바일에서 기본 스크롤 방지 */
   }
   
-  .login-section {
-    width: 90%;
-    max-width: 400px;
+  .page-indicators {
+    right: 10px;
+  }
+  
+  .indicator {
+    width: 8px;
+    height: 8px;
   }
 }
 </style>
