@@ -32,6 +32,7 @@
         :data-active="currentPage === 3"
         :data-prev="currentPage > 3"
         :data-next="currentPage < 3"
+        :isFourth="isFourth"
       />
     </div>
     
@@ -66,6 +67,7 @@ const totalPages = 4
 const container = ref(null)
 const touchStartY = ref(0)
 const moveDirection = ref('') // 'up' 또는 'down'
+const isFourth = ref(false) // FourthPage 활성화 여부 추적
 
 // 페이지 컨테이너 클래스 계산
 const containerClasses = computed(() => ({
@@ -83,6 +85,13 @@ const nextPage = () => {
     moveDirection.value = ''
   }, 500)
   currentPage.value++
+  
+  // FourthPage로 이동하는 경우 isFourth를 true로 설정
+  if (currentPage.value === 3) {
+    isFourth.value = true
+  } else {
+    isFourth.value = false
+  }
 }
 
 const prevPage = () => {
@@ -96,6 +105,11 @@ const prevPage = () => {
     moveDirection.value = ''
   }, 500)
   currentPage.value--
+  
+  // FourthPage에서 벗어나는 경우 isFourth를 false로 설정
+  if (currentPage.value !== 3) {
+    isFourth.value = false
+  }
 }
 
 const goToPage = (page) => {
@@ -105,6 +119,13 @@ const goToPage = (page) => {
   isAnimating.value = true
   setTimeout(() => { isAnimating.value = false }, 500)
   currentPage.value = page
+  
+  // FourthPage로 이동하는 경우 isFourth를 true로 설정
+  if (page === 3) {
+    isFourth.value = true
+  } else {
+    isFourth.value = false
+  }
 }
 
 // 휠 이벤트 처리

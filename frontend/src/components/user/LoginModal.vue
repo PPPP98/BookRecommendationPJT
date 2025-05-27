@@ -45,9 +45,9 @@
       <div class="divider">또는</div>
       
       <!-- 소셜 로그인 버튼 (더미) -->
-      <button type="button" class="social-button facebook">
+      <!-- <button type="button" class="social-button facebook">
         <span>Facebook으로 계속하기</span>
-      </button>
+      </button> -->
       
       <button type="button" class="social-button google">
         <span>Google 계정으로 계속하기</span>
@@ -142,7 +142,7 @@ h2 {
 
 .welcome-text {
   font-size: 1rem;
-  color: #B6B09F;
+  color: #666;
   margin-bottom: 1.5rem;
 }
 
@@ -168,7 +168,7 @@ input {
 }
 
 input:focus {
-  border-color: #B6B09F;
+  border-color: #666;
   outline: none;
   background-color: rgba(255, 255, 255, 0.9);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -182,13 +182,13 @@ input:focus {
 
 .forgot-password {
   font-size: 0.8rem;
-  color: #B6B09F;
+  color: #666;
   text-decoration: none;
 }
 
 .login-button {
   padding: 0.85rem;
-  background-color: #B6B09F;
+  background-color: #2c3e50;
   color: white;
   border: none;
   border-radius: 10px;
@@ -202,13 +202,13 @@ input:focus {
 }
 
 .login-button:hover {
-  background-color: #a79e8d;
+  background-color: #34495e;
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .login-button:disabled {
-  background-color: #ccc;
+  background-color: #666;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
@@ -227,7 +227,7 @@ input:focus {
 
 .divider {
   text-align: center;
-  color: #B6B09F;
+  color: #666;
   margin: 1rem 0;
   position: relative;
 }
@@ -255,7 +255,7 @@ input:focus {
   justify-content: center;
   padding: 0.85rem;
   border-radius: 10px;
-  border: 1px solid rgba(234, 228, 213, 0.7);
+  border: 1px solid #666;
   background-color: rgba(255, 255, 255, 0.8);
   margin-bottom: 0.9rem;
   cursor: pointer;
@@ -283,8 +283,8 @@ input:focus {
 
 .google:hover {
   background-color: #FFF8F0;
-  border-color: #DB4437;
-  box-shadow: 0 4px 8px rgba(219, 68, 55, 0.15);
+  border-color: #061630;
+  box-shadow: 0 4px 8px rgba(76, 76, 76, 0.256);
   transform: translateY(-1px);
 }
 
@@ -292,7 +292,7 @@ input:focus {
   margin-top: 1rem;
   text-align: center;
   font-size: 0.9rem;
-  color: #B6B09F;
+  color: #666;
 }
 
 .signup-link a {

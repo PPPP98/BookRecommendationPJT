@@ -14,7 +14,7 @@
               aria-label="로그인 페이지로 이동"
             >
               <span>로그인하기</span>
-              <i class="arrow-icon" aria-hidden="true">↓</i>
+              <i class="arrow-icon" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -171,8 +171,12 @@ const goToProfile = () => {
 
 // API 요청 함수
 const fetchRecommendedBooks = async () => {
-  if (!authStore.isAuthenticated) return;
+  if (!authStore.isAuthenticated) {
+    console.log('인증되지 않은 상태에서 API 호출 시도, 취소됨');
+    return;
+  }
 
+  console.log('추천 도서 API 호출 시작, 인증 토큰:', authStore.accessToken?.slice(0, 10) + '...');
   isLoading.value = true;
   error.value = null;
 
@@ -183,7 +187,9 @@ const fetchRecommendedBooks = async () => {
       },
     });
     recommendedBooks.value = response.data.slice(0, 5); // 최대 5개만 표시
+    console.log('추천 도서 로드 성공, 개수:', recommendedBooks.value.length);
   } catch (err) {
+    console.error('추천 도서 API 호출 실패:', err.response?.status, err.message);
     error.value =
       err.response?.status === 400
         ? ERROR_MESSAGES.PROFILE_INCOMPLETE
@@ -213,14 +219,34 @@ watch(selectedBook, () => {
   animationKey.value++;
 });
 
+// authStore.isAuthenticated가 변경될 때마다 추천 도서 가져오기
+watch(() => authStore.isAuthenticated, (newIsAuthenticated, oldIsAuthenticated) => {
+  console.log('인증 상태 변경:', oldIsAuthenticated, '->', newIsAuthenticated);
+  if (newIsAuthenticated) {
+    console.log('추천 도서 데이터 요청 시작');
+    fetchRecommendedBooks().then(() => {
+      console.log('추천 도서 데이터 로드 완료:', recommendedBooks.value.length);
+      if (recommendedBooks.value.length > 0) {
+        selectedBook.value = 0; // 첫 번째 도서로 초기화
+      }
+    }).catch(err => {
+      console.error('추천 도서 로드 중 오류:', err);
+    });
+  }
+}, { immediate: true });
+
 // 라이프사이클 훅
 onMounted(() => {
+  // 컴포넌트 마운트 시 이미 로그인한 상태라면 데이터 가져오기
   if (authStore.isAuthenticated) {
+    console.log('마운트 시 인증됨 - 추천 도서 요청');
     fetchRecommendedBooks().then(() => {
       if (recommendedBooks.value.length > 0) {
-        selectedBook.value = recommendedBooks.value[0]; // 첫 번째 도서로 초기화
+        selectedBook.value = 0; // 첫 번째 도서로 초기화
       }
     });
+  } else {
+    console.log('마운트 시 인증되지 않음');
   }
 });
 </script>
@@ -360,11 +386,6 @@ onMounted(() => {
   transition: all 0.3s ease;
 }
 
-.arrow-icon {
-  font-size: 1.2rem;
-  transition: transform 0.3s ease;
-}
-
 .login-button:hover {
   background-color: #34495e;
   transform: translateY(-2px);
@@ -417,8 +438,8 @@ onMounted(() => {
 }
 
 .skeleton-image {
-  width: 100%;
-  height: 280px;
+  width: 150px;
+  height: 210px;
   background: linear-gradient(90deg, #f0f0f0 25%, #e3e3e3 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: shimmer 2.5s infinite;
@@ -515,6 +536,7 @@ onMounted(() => {
   display: flex;
   gap: 2rem;
   width: 100%;
+  height: 230px;
   justify-content: center;
   align-items: center;
 }

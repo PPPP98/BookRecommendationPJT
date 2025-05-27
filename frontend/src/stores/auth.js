@@ -95,9 +95,11 @@ export const useAuthStore = defineStore('auth', () => {
   // 로그인
   const login = async (payload) => {
     try {
+      console.log('로그인 시도 중...');
       const response = await axios.post('/api/accounts/login/', payload)
       const { access, refresh, user: userData } = response.data
       if (access && userData) {
+        console.log('로그인 성공, 인증 데이터 설정 중');
         user.value = {
           id: userData.pk || userData.id,
           username: userData.username,
@@ -113,6 +115,7 @@ export const useAuthStore = defineStore('auth', () => {
           localStorage.setItem('refresh_token', refresh)
         }
         axios.defaults.headers.common['Authorization'] = `Bearer ${access}`
+        console.log('인증 상태 업데이트 완료, isAuthenticated:', isAuthenticated.value);
         return response
       } else {
         throw new Error('Invalid login response')

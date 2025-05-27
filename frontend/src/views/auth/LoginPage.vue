@@ -41,12 +41,12 @@
       <div class="social-login">
         <h2>소셜 계정으로 로그인</h2>
         <div class="social-buttons">
-          <button @click="socialLogin('kakao')" class="social-button kakao">
+          <!-- <button @click="socialLogin('kakao')" class="social-button kakao">
             카카오 로그인
           </button>
           <button @click="socialLogin('naver')" class="social-button naver">
             네이버 로그인
-          </button>
+          </button> -->
           <button @click="socialLogin('google')" class="social-button google">
             구글 로그인
           </button>
