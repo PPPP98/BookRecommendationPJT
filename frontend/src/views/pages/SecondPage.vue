@@ -85,7 +85,7 @@
         </div>
       </Transition>
     </div>
-    <div v-if="showNextDiv" class="next-show">
+    <div v-if="showNextDiv && isAuthenticated" class="next-show">
       <h1 class="tracking-in-expand recommend-title">내가 좋아할 만한 도서</h1>
       <div
         class="book-detail-container"
@@ -147,6 +147,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 // 상태 변수들
+const isAuthenticated = computed(() => authStore.isAuthenticated);
 const recommendedBooks = ref([]);
 const isLoading = ref(false);
 const error = ref(null);
