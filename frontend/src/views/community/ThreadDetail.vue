@@ -1,64 +1,109 @@
 <template>
   <div class="thread-detail-page">
     <main class="main-content" v-if="thread">
-      <ThreadHeader
-        :thread="thread"
-        :fallback-profile="fallbackProfile"
-        :fallback-book-cover="fallbackBookCover"
-        :formatted-date="formattedDate"
-        @img-error="onProfileImgError"
-        @book-img-error="onBookImgError"
-      />
-      <ThreadActions
-        :thread="thread"
-        :is-liked="isLiked"
-        :like-loading="likeLoading"
-        :is-following="isFollowing"
-        :follow-loading="followLoading"
-        :is-mine="isMine"
-        :show-follow-button="showFollowButton"
-        @toggle-like="toggleLike"
-        @toggle-follow="toggleFollow"
-        @start-edit="startEdit"
-        @delete-thread="deleteThread"
-      />
-      <ThreadEditForm
-        v-if="editing"
-        :title="editTitle"
-        :content="editContent"
-        :loading="editLoading"
-        :error="editError"
-        @update:title="editTitle = $event"
-        @update:content="editContent = $event"
-        @submit="submitEdit"
-        @cancel="cancelEdit"
-      />
-      <div class="thread-content" v-else>
-        <p>{{ thread.content }}</p>
-      </div>
-      <CommentSection
-        :comments="thread.comments"
-        :user-id="userId"
-        :thread-id="thread.id"
-        @add-comment="addComment"
-        @edit-comment="submitEditComment"
-        @delete-comment="deleteComment"
-        @open-detail="openCommentDetail"
-        :comment-loading="commentLoading"
-        :edit-comment-loading="editCommentLoading"
-        :edit-comment-error="editCommentError"
-        :editing-comment-id="editingCommentId"
-        :edit-comment-content="editCommentContent"
-        @start-edit-comment="startEditComment"
-        @cancel-edit-comment="cancelEditComment"
-        :show-comment-detail="showCommentDetail"
-        :selected-comment-detail="selectedCommentDetail"
-        :comment-detail-loading="commentDetailLoading"
-        :comment-detail-error="commentDetailError"
-        @close-detail="showCommentDetail = false"
-        :new-comment="newComment"
-        @update:new-comment="newComment = $event"
-      />
+      <!-- 📚 책 정보 카드 -->
+      <section class="book-card">
+        <img
+          class="book-cover"
+          :src="thread.book?.cover || fallbackBookCover"
+          :alt="thread.book?.title"
+          @error="onBookImgError"
+        />
+        <div class="book-meta">
+          <div class="book-title">{{ thread.book?.title }}</div>
+          <div class="book-author">{{ thread.book?.author }}</div>
+          <div class="book-publisher" v-if="thread.book?.publisher">
+            출판사: {{ thread.book.publisher }}
+          </div>
+          <div class="book-rating" v-if="thread.book?.customer_review_rank">
+            평점:
+            <span class="stars">
+              <span v-for="n in 5" :key="n" class="star" :class="{ filled: n <= Math.round(thread.book.customer_review_rank) }">&#9733;</span>
+            </span>
+            <span class="rating-value">{{ Math.min(thread.book.customer_review_rank, 5).toFixed(1) }}/5</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 📝 스레드 헤더 및 액션 -->
+      <section class="thread-header-card">
+        <div class="thread-title">{{ thread.title }}</div>
+        <div class="thread-meta">
+          <div class="author-info">
+            <img
+              class="author-image"
+              :src="thread.user?.profile_image || fallbackProfile"
+              :alt="thread.user?.nickname || thread.user?.username"
+              @error="onProfileImgError"
+            />
+            <span class="author-name">{{ thread.user?.nickname || thread.user?.username }}</span>
+            <span class="thread-date">{{ formattedDate }}</span>
+          </div>
+          <div class="thread-actions">
+            <button class="like-button" :class="{ liked: isLiked }" @click="toggleLike" :disabled="likeLoading">
+              <span v-if="isLiked">❤️</span>
+              <span v-else>🤍</span>
+              {{ thread.like_count }}
+            </button>
+            <button
+              v-if="showFollowButton"
+              class="follow-button"
+              :class="{ following: isFollowing }"
+              @click="toggleFollow"
+              :disabled="followLoading"
+            >
+              {{ isFollowing ? '팔로잉' : '팔로우' }}
+            </button>
+            <button v-if="isMine" class="edit-button" @click="startEdit">수정</button>
+            <button v-if="isMine" class="delete-button" @click="deleteThread">삭제</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ✏️ 스레드 본문/수정폼 -->
+      <section>
+        <ThreadEditForm
+          v-if="editing"
+          :title="editTitle"
+          :content="editContent"
+          :loading="editLoading"
+          :error="editError"
+          @update:title="editTitle = $event"
+          @update:content="editContent = $event"
+          @submit="submitEdit"
+          @cancel="cancelEdit"
+        />
+        <div class="thread-content" v-else>
+          <p>{{ thread.content }}</p>
+        </div>
+      </section>
+
+      <!-- 💬 댓글 섹션 -->
+      <section class="comments-section">
+        <CommentSection
+          :comments="thread.comments"
+          :user-id="userId"
+          :thread-id="thread.id"
+          @add-comment="addComment"
+          @edit-comment="submitEditComment"
+          @delete-comment="deleteComment"
+          @open-detail="openCommentDetail"
+          :comment-loading="commentLoading"
+          :edit-comment-loading="editCommentLoading"
+          :edit-comment-error="editCommentError"
+          :editing-comment-id="editingCommentId"
+          :edit-comment-content="editCommentContent"
+          @start-edit-comment="startEditComment"
+          @cancel-edit-comment="cancelEditComment"
+          :show-comment-detail="showCommentDetail"
+          :selected-comment-detail="selectedCommentDetail"
+          :comment-detail-loading="commentDetailLoading"
+          :comment-detail-error="commentDetailError"
+          @close-detail="showCommentDetail = false"
+          :new-comment="newComment"
+          @update:new-comment="newComment = $event"
+        />
+      </section>
       <div v-if="error" class="error-state">{{ error }}</div>
     </main>
     <ErrorPage v-else type="loading" message="쓰레드를 불러오는 중입니다." />
@@ -70,19 +115,14 @@
 import axios from 'axios'
 import Footer from '@/components/common/Footer.vue'
 import ErrorPage from '@/components/common/ErrorPage.vue'
-import ThreadHeader from '@/components/thread/ThreadHeader.vue'
-import ThreadActions from '@/components/thread/ThreadActions.vue'
 import ThreadEditForm from '@/components/thread/ThreadEditForm.vue'
 import CommentSection from '@/components/comment/CommentSection.vue'
 import { useAuthStore } from '@/stores/auth'
-
 export default {
   name: 'ThreadDetailPage',
   components: {
     Footer,
     ErrorPage,
-    ThreadHeader,
-    ThreadActions,
     ThreadEditForm,
     CommentSection
   },
@@ -94,7 +134,7 @@ export default {
   },
   data() {
     return {
-      thread: null, // 반드시 선언!
+      thread: null,
       fallbackBookCover: 'https://cdn-icons-png.flaticon.com/512/29/29302.png',
       fallbackProfile: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
       isLiked: false,
@@ -140,7 +180,7 @@ export default {
         String(this.userId) === String(this.thread.user.id || this.thread.user.pk)
       )
     },
-    showFollowButtonComputed() {
+    showFollowButton() {
       return (
         this.thread &&
         this.thread.user &&
@@ -153,7 +193,6 @@ export default {
     async fetchThread() {
       try {
         const response = await axios.get(`/api/threads/${this.id}/`)
-        // 명세에 따라 모든 필드 그대로 할당
         this.thread = {
           ...response.data,
           book: response.data.book || {},
@@ -162,7 +201,6 @@ export default {
         }
         this.isLiked = response.data.is_liked || false
         this.isFollowing = response.data.is_followed || false
-        this.showFollowButton = this.showFollowButtonComputed
       } catch (err) {
         this.error = '쓰레드를 불러오는데 실패했습니다.'
         this.thread = null
@@ -256,7 +294,7 @@ export default {
         this.error = '삭제에 실패했습니다.'
       }
     },
-    // 댓글 관련 메서드 (paste.txt와 동일하게 유지, catch 블록 등도 포함)
+    // 댓글 관련 메서드
     async addComment(content) {
       if (!content.trim() || !this.thread) return
       this.commentLoading = true
@@ -300,25 +338,14 @@ export default {
           { headers: { Authorization: `Bearer ${token}` } }
         )
         const idx = this.thread.comments.findIndex(c => c.id === comment.id)
-if (idx !== -1) {
-  // Vue 3에서는 직접 할당!
-  this.thread.comments[idx] = {
-    ...this.thread.comments[idx],
-    ...response.data
-  }
-}
-
+        if (idx !== -1) {
+          this.thread.comments[idx] = {
+            ...this.thread.comments[idx],
+            ...response.data
+          }
+        }
         this.cancelEditComment()
       } catch (err) {
-        console.error('댓글 수정 에러:', err, err.response)
-        if (err && err.response) {
-          alert(
-            '댓글 수정 실패: ' +
-            (err.response.data?.detail || JSON.stringify(err.response.data) || err.message)
-          );
-        } else {
-          alert('댓글 수정 실패: 네트워크/알 수 없는 오류');
-        }
         this.editCommentError = '댓글 수정에 실패했습니다.'
       } finally {
         this.editCommentLoading = false
@@ -369,231 +396,238 @@ if (idx !== -1) {
 </script>
 
 <style scoped>
-/* paste.txt의 기존 스타일 그대로 사용 */
+:root {
+  --color-bg: #F2F2F2;
+  --color-card: #EAE4D5;
+  --color-accent: #B6B09F;
+  --color-text: #000000;
+  --color-border: #B6B09F;
+  --color-error: #dc3545;
+}
+
+/* 전체 배경 */
 .thread-detail-page {
+  background: var(--color-bg);
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
 }
 .main-content {
   flex: 1;
-  padding: 2rem;
+  padding: 2.5rem 1rem 2rem 1rem;
   max-width: 800px;
   margin: 0 auto;
 }
-.thread-detail-page {
+
+/* 책 정보 카드 */
+.book-card {
   display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-.main-content {
-  flex: 1;
-  padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
-}
-.thread-header {
-  margin-bottom: 2rem;
-}
-.author-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  color: #666;
-  margin-top: 0.5rem;
-}
-.author-link {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  transition: color 0.15s;
-}
-.author-link:hover .author-name {
-  text-decoration: underline;
-  color: #1976d2;
-}
-.author-image {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: #efefef;
-}
-.book-info {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 2rem;
-}
-.book-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 0.5rem;
-}
-.book-detail {
-  display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1.5rem;
+  background: var(--color-card);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(182,176,159,0.07);
+  border: 1.5px solid var(--color-border);
+  padding: 1.3rem 1.7rem;
+  margin-bottom: 2rem;
 }
 .book-cover {
-  width: 80px;
-  height: 110px;
+  width: 82px;
+  height: 112px;
   object-fit: cover;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border-radius: 8px;
   background: #fff;
+  box-shadow: 0 2px 8px rgba(182,176,159,0.10);
 }
 .book-meta {
   flex: 1;
 }
-.book-author {
-  margin-bottom: 0.5rem;
-  color: #444;
+.book-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.3rem;
 }
-.rating {
+.book-author {
+  font-size: 1.05rem;
+  color: var(--color-accent);
+  margin-bottom: 0.3rem;
+}
+.book-publisher {
+  font-size: 0.97rem;
+  color: #7a7a7a;
+  margin-bottom: 0.3rem;
+}
+.book-rating {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0.2rem;
+  font-size: 0.98rem;
 }
 .stars {
   color: #f0ad4e;
 }
-.thread-content {
+.star {
   font-size: 1.1rem;
-  line-height: 1.6;
+  color: #e0e0e0;
+}
+.star.filled {
+  color: #f7b500;
+  text-shadow: 0 1px 4px #ffecb3;
+}
+.rating-value {
+  color: var(--color-accent);
+  font-weight: 600;
+  margin-left: 0.2rem;
+}
+
+/* 스레드 헤더 카드 */
+.thread-header-card {
+  background: var(--color-card);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(182,176,159,0.07);
+  border: 1.5px solid var(--color-border);
+  padding: 1.2rem 1.7rem 1.1rem 1.7rem;
   margin-bottom: 2rem;
 }
-.thread-actions {
-  margin-bottom: 2rem;
+.thread-title {
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.7rem;
+}
+.thread-meta {
   display: flex;
-  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+}
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.author-image {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #efefef;
+}
+.author-name {
+  font-weight: 600;
+  color: var(--color-accent);
+  font-size: 1.05rem;
+}
+.thread-date {
+  font-size: 0.95rem;
+  color: #888;
+  margin-left: 0.5rem;
+}
+.thread-actions {
+  display: flex;
+  gap: 0.7rem;
   align-items: center;
 }
 .like-button {
-  background: none;
-  border: 1px solid #ddd;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-accent);
+  font-size: 1.07rem;
+  border-radius: 6px;
+  padding: 0.4rem 1.1rem;
   cursor: pointer;
+  font-weight: 600;
+  transition: background 0.13s, color 0.13s, border 0.13s;
+}
+.like-button.liked {
+  background: #fff0f0;
+  color: #dc3545;
+  border-color: #dc3545;
 }
 .follow-button {
-  background: #1976d2;
+  background: var(--color-accent);
   color: #fff;
   border: none;
-  padding: 0.5rem 1.1rem;
-  border-radius: 4px;
+  border-radius: 6px;
+  padding: 0.4rem 1.2rem;
+  font-weight: 600;
+  font-size: 1.01rem;
   cursor: pointer;
-  font-weight: 500;
-  transition: background 0.18s;
+  transition: background 0.13s;
 }
 .follow-button.following {
-  background: #f8f9fa;
-  color: #1976d2;
-  border: 1.5px solid #1976d2;
+  background: #fff;
+  color: var(--color-accent);
+  border: 1.5px solid var(--color-accent);
 }
 .follow-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 .edit-button {
-  background-color: #ffc107;
-  color: #333;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  background: #fffbe6;
+  color: #bfa100;
+  border: 1.5px solid #bfa100;
+  border-radius: 6px;
+  padding: 0.4rem 1.2rem;
+  font-weight: 600;
+  font-size: 1.01rem;
   cursor: pointer;
+  transition: background 0.13s;
 }
 .edit-button:hover {
-  background-color: #e0a800;
+  background: #fff3cd;
 }
 .delete-button {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  background: #fff0f0;
+  color: #dc3545;
+  border: 1.5px solid #dc3545;
+  border-radius: 6px;
+  padding: 0.4rem 1.2rem;
+  font-weight: 600;
+  font-size: 1.01rem;
   cursor: pointer;
+  transition: background 0.13s;
 }
-.edit-form {
-  margin: 2rem 0;
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 8px;
+.delete-button:hover {
+  background: #ffeaea;
 }
-.edit-actions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
+.thread-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.3rem 1.2rem;
+  margin-bottom: 2.5rem;
+  color: var(--color-text);
+  font-size: 1.13rem;
+  line-height: 1.7;
+  box-shadow: 0 2px 8px rgba(182,176,159,0.07);
+  border: 1.5px solid #e0e0e0;
 }
-.submit-btn {
-  background: #0066cc;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
+.error-state {
+  color: var(--color-error);
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
-.cancel-btn {
-  background: #f8f9fa;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-}
+
+/* 댓글 영역은 위에서 제공한 스타일 재사용 가능 */
 .comments-section {
   margin-top: 3rem;
 }
-.comment-form {
-  margin-bottom: 2rem;
-}
-.comment-form textarea {
-  width: 100%;
-  height: 100px;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-}
-.comment-form button {
-  background: #0066cc;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.comment-form button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-.comments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.comment {
-  padding: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-.comment-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-.comment-author {
-  font-weight: bold;
-}
-.comment-date {
-  color: #666;
-  font-size: 0.9rem;
-}
-.error-state {
-  color: #dc3545;
-  margin-top: 1rem;
-  text-align: center;
+@media (max-width: 600px) {
+  .main-content {
+    padding: 1rem;
+  }
+  .book-card,
+  .thread-header-card {
+    padding: 1rem 0.6rem;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .thread-content {
+    padding: 1rem 0.5rem;
+  }
 }
 </style>

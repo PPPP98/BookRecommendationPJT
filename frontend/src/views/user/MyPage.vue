@@ -308,36 +308,20 @@
 </template>
 
 <script>
-<<<<<<< HEAD
-import Navbar from '@/components/common/Navbar.vue'
-import Footer from '@/components/common/Footer.vue'
-import UserInfo from '@/components/user/UserInfo.vue'
-import BookCard from '@/components/books/BookCard.vue'
-import axios from 'axios'
-import { useAuthStore } from '@/stores/auth'
-=======
 import Footer from "@/components/common/Footer.vue";
 import UserInfo from "@/components/user/UserInfo.vue";
 import BookCard from "@/components/books/BookCard.vue";
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth";
 import UserEditForm from "@/components/user/UserEditForm.vue";
->>>>>>> dc8ae51dd3168e30110089178adc633091541404
 
 export default {
   name: "MyPage",
   components: {
-<<<<<<< HEAD
-    Navbar,
-    Footer,
-    UserInfo,
-    BookCard
-=======
     Footer,
     UserInfo,
     BookCard,
     UserEditForm,
->>>>>>> dc8ae51dd3168e30110089178adc633091541404
   },
   data() {
     return {
@@ -404,8 +388,6 @@ export default {
         return 0;
       }
     },
-<<<<<<< HEAD
-=======
     onUserUpdated(updatedUser) {
       this.user = updatedUser;
       this.editMode = false;
@@ -414,7 +396,6 @@ export default {
       this.editMode = false;
       this.editError = null;
     },
->>>>>>> dc8ae51dd3168e30110089178adc633091541404
     async fetchUserProfile(userId) {
       this.loadingUser = true;
       this.errorUser = null;
@@ -519,19 +500,11 @@ export default {
       this.fetchLikedBooks(this.user.id);
     },
     closeLikedBooksModal() {
-<<<<<<< HEAD
-      this.showLikedBooksList = false
-      this.likedBooks = []
-      this.likedBooksNext = null
-      this.likedBooksPrev = null
-      this.errorLikedBooks = null
-=======
       this.showLikedBooksList = false;
       // 페이지네이션 상태만 초기화
       this.likedBooksNext = null;
       this.likedBooksPrev = null;
       this.errorLikedBooks = null;
->>>>>>> dc8ae51dd3168e30110089178adc633091541404
     },
     async followUser(userId) {
       try {
@@ -967,3 +940,4 @@ export default {
   }
 }
 </style>
+<style scoped></style>
