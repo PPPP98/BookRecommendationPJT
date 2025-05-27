@@ -1,11 +1,12 @@
 <template>
-  <router-view />
+  <div id="app">
+    <router-view />
+    <TopButton />
+  </div>
 </template>
 
-<script>
-export default {
-  name: 'App'
-}
+<script setup>
+import TopButton from '@/components/common/TopButton.vue'
 </script>
 
 <style>

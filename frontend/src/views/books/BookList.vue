@@ -136,14 +136,12 @@ export default {
       ''
     )
 
-    // NavBar와 동일하게 사용자 프로필 이미지 처리
     const userProfileImage = computed(() => {
       const img = user.value?.profile_image
       if (!img) return CDN_PROFILE
       if (img.startsWith('http')) return img
       return `${BACKEND_URL}${img}`
     })
-
     function onImgError(e) {
       if (e.target.src !== CDN_PROFILE) {
         e.target.src = CDN_PROFILE
@@ -317,7 +315,6 @@ export default {
   font-size: 0.9rem;
   transition: all 0.2s ease;
 }
-
 .category-button:hover:not(:disabled) {
   background: #f0f0f0;
   border-color: #ccc;
@@ -327,7 +324,6 @@ export default {
   color: white;
   border-color: #0066cc;
 }
-
 .category-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;

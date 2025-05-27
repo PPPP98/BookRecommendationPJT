@@ -1,378 +1,523 @@
 <template>
-  <div class="community-pinterest">
-    <Navbar />
+  <div class="book-home">
+    <!-- 네비게이션 바 (상단 고정) -->
+    <navbar/>
 
-    <main class="main-content">
-      <div class="page-header">
-        <h1>커뮤니티</h1>
-      </div>
-
-      <!-- 상단 3개 카드 -->
-      <section class="top-ideas">
-        <PinterestCard
-          v-if="popularThreads.length"
-          :thread="popularThreads[currentPopularIndex]"
-          label="인기 쓰레드"
-        />
-        <PinterestCard
-          v-if="followingThreads.length"
-          :thread="followingThreads[0]"
-          label="팔로잉 쓰레드"
-        />
-        <PinterestCard
-          :thread="{
-            book: { cover: 'https://source.unsplash.com/220x300/?community,idea' },
-            title: '임시 카드',
-            user: { nickname: '임시' },
-            like_count: 0,
-            comment_count: 0
-          }"
-          label="임시 쓰레드"
-        />
+    <!-- 메인 카드 그리드 -->
+    <main class="main-grid">
+      <!-- 왼쪽: Book Club Episodes -->
+      <section class="main-col col-left">
+        <div class="section-title"><span>📖</span> Book Club Episodes</div>
+        <div class="main-card card-episode">
+          <div class="card-title">Discover the World of Books</div>
+          <div class="card-row">
+            <img class="avatar" src="https://randomuser.me/api/portraits/men/2.jpg" />
+            <span class="card-label">Discover</span>
+          </div>
+          <div class="card-row">
+            <img class="avatar" src="https://randomuser.me/api/portraits/women/3.jpg" />
+            <span class="card-label">Bookworm</span>
+          </div>
+        </div>
+        <div class="main-card">
+          <img class="card-img" src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80" />
+          <div class="card-caption">Heartwarming Story</div>
+          <div class="card-title">Lost and Found: A Book's Journey</div>
+          <div class="card-footer">Exciting Read · Discover a new world</div>
+        </div>
       </section>
 
-      <div class="divider"></div>
+      <!-- 중앙: 메인 특집 -->
+      <section class="main-col col-center">
+        <div class="main-card card-featured">
+          <img class="card-img" src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80" />
+          <div class="card-caption">Literary Treasures</div>
+          <div class="card-title">Escape with Engaging Reads</div>
+          <div class="card-desc">Immerse yourself in captivating stories and explore new worlds through the pages of a book.</div>
+        </div>
+      </section>
 
-      <!-- 전체 쓰레드 Masonry -->
-      <section class="masonry-section">
-        <h2 class="masonry-title">새로운 소식</h2>
-        <div v-if="loading" class="info-state">불러오는 중...</div>
-        <div v-else-if="error" class="error-state">{{ error }}</div>
-        <div v-else>
-          <div v-if="threads.length === 0" class="info-state">게시글이 없습니다.</div>
-          <div v-else class="masonry-grid">
-            <PinterestCard
-              v-for="thread in threads"
-              :key="thread.id"
-              :thread="thread"
-              @click.native="goToThread(thread.id)"
-            />
-          </div>
-          <div class="pagination">
-            <button v-if="prev" @click="goToPage(prev)">이전</button>
-            <button v-if="next" @click="goToPage(next)">다음</button>
-          </div>
+      <!-- 오른쪽: 추천/뉴스 -->
+      <section class="main-col col-right">
+        <div class="main-card">
+          <img class="card-img" src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80" />
+          <div class="card-caption">Book Recommendations</div>
+          <div class="card-title">Dive into a New Story</div>
+          <div class="card-footer">Book Lover's Paradise · Book Discovery</div>
+        </div>
+        <div class="main-card">
+          <img class="card-img" src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80" />
+          <div class="card-caption">Latest Book News</div>
+          <div class="card-title">Explore the Book Universe</div>
+          <div class="card-footer">Book Enthusiast · Bookworm Community</div>
         </div>
       </section>
     </main>
 
-    <Footer />
+    <!-- Join the Book Club -->
+    <section class="club-section">
+      <div class="club-header">
+        <h2>Join the Book Club</h2>
+        <button class="join-btn join-now">Join Now</button>
+      </div>
+      <div class="club-grid">
+        <div class="club-card">
+          <img class="card-img" src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80" />
+          <div class="card-caption">Book Discussions</div>
+          <div class="card-title">Discover the Best Books</div>
+          <div class="card-footer">Book Mixologist · Latest Book News</div>
+        </div>
+        <div class="club-card">
+          <img class="card-img" src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80" />
+          <div class="card-caption">Literary Delights</div>
+          <div class="card-title">Find Hidden Gems</div>
+          <div class="card-footer">Bookworm's Picks · Literary Explorer</div>
+        </div>
+        <div class="club-card">
+          <img class="card-img" src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80" />
+          <div class="card-caption">Book Discoveries</div>
+          <div class="card-title">Reading on a Budget</div>
+          <div class="card-footer">Literary Explorer · Latest Book News</div>
+        </div>
+        <div class="club-card">
+          <img class="card-img" src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80" />
+          <div class="card-caption">Affordable Reads</div>
+          <div class="card-title">Mixing Book Mocktails</div>
+          <div class="card-footer">Book Mixologist · Latest Book News</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Editor's Book Picks -->
+    <section class="editor-section">
+      <h2 class="editor-title">Editor's Book Picks</h2>
+      <div class="editor-grid">
+        <div class="editor-card">
+          <span class="editor-rank">1</span>
+          <img class="card-img" src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80" />
+          <div class="card-caption">Latest Book News</div>
+          <div class="card-title">Book Lovers' Happiness</div>
+          <div class="card-footer">Exciting Reads</div>
+        </div>
+        <div class="editor-card">
+          <span class="editor-rank">2</span>
+          <img class="card-img" src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80" />
+          <div class="card-caption">Book Enthusiasts</div>
+          <div class="card-title">Get Ready for the Book Championship</div>
+          <div class="card-footer">Bookworm Community</div>
+        </div>
+        <div class="editor-card">
+          <span class="editor-rank">3</span>
+          <img class="card-img" src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80" />
+          <div class="card-caption">Literary Delights</div>
+          <div class="card-title">Experience the Magic of Books</div>
+          <div class="card-footer">Book Club Fun</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 푸터 -->
+    <footer class="footer-section">
+      <div class="footer-row">
+        <div class="footer-brand">
+          <div class="footer-title">Book Community</div>
+          <div class="footer-desc">Inspiring readers since 2018</div>
+        </div>
+        <div class="footer-col">
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="#">Our story</a></li>
+            <li><a href="#">Opportunities</a></li>
+            <li><a href="#">Get in touch</a></li>
+            <li><a href="#">Articles</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Join the discussion</h4>
+          <ul>
+            <li><a href="#">Support Center</a></li>
+            <li><a href="#">Join as Premium</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Connect with us</h4>
+          <ul>
+            <li><a href="#">Facebook</a></li>
+            <li><a href="#">Twitter</a></li>
+            <li><a href="#">Instagram</a></li>
+          </ul>
+        </div>
+      </div>
+    </footer>
   </div>
 </template>
 
 <script>
 import Navbar from '@/components/common/Navbar.vue'
-import Footer from '@/components/common/Footer.vue'
-import axios from 'axios'
-import { h } from 'vue'
-
-function toRelativeUrl(url) {
-  if (!url) return null
-  try {
-    const u = new URL(url)
-    return u.pathname + u.search
-  } catch {
-    return url
-  }
-}
-
-// 커스텀 카드 컴포넌트 (렌더 함수)
-const PinterestCard = {
-  name: 'PinterestCard',
-  props: {
-    thread: { type: Object, required: true },
-    label: { type: String, default: '' }
-  },
-  render() {
-    const cover =
-      this.thread.book && this.thread.book.cover
-        ? this.thread.book.cover
-        : (this.thread.image || 'https://source.unsplash.com/220x300/?book,community')
-    const title = this.thread.title || ''
-    const nickname =
-      (this.thread.user && (this.thread.user.nickname || this.thread.user.username)) || '작성자 미상'
-    const likeCount = this.thread.like_count || 0
-    const commentCount = this.thread.comment_count || 0
-
-    return h(
-      'div',
-      { class: 'custom-card', onClick: this.$attrs.onClick },
-      [
-        this.label
-          ? h('div', { class: 'custom-label' }, this.label)
-          : null,
-        h('img', {
-          class: 'custom-img',
-          src: cover,
-          alt: title
-        }),
-        h('div', { class: 'custom-title' }, title),
-        h('div', { class: 'custom-meta' }, nickname),
-        h('div', { class: 'custom-meta-counts' }, [
-          h('span', { class: 'like' }, `❤️ ${likeCount}`),
-          h('span', { class: 'comment' }, `💬 ${commentCount}`)
-        ])
-      ]
-    )
-  }
-}
-
 export default {
-  name: 'CommunityPinterest',
-  components: { Navbar, Footer, PinterestCard },
-  data() {
-    return {
-      threads: [],
-      next: null,
-      prev: null,
-      loading: false,
-      error: null,
-      currentPage: 1,
-      itemsPerPage: 20,
-      popularThreads: [],
-      currentPopularIndex: 0,
-      slideInterval: null,
-      followingThreads: []
-    }
-  },
-  mounted() {
-    this.fetchPopularThreads()
-    this.fetchThreads()
-    this.fetchFollowingThreads()
-    this.startSlideInterval()
-  },
-  beforeUnmount() {
-    this.clearSlideInterval()
-  },
-  methods: {
-    async fetchThreads(url) {
-      this.loading = true
-      this.error = null
-      let apiUrl
-      if (url) {
-        apiUrl = toRelativeUrl(url)
-        const match = apiUrl.match(/[?&]page=(\d+)/)
-        if (match) this.currentPage = parseInt(match[1])
-      } else {
-        apiUrl = `/api/threads/?page=${this.currentPage}&page_size=${this.itemsPerPage}`
-      }
-      try {
-        const { data } = await axios.get(apiUrl)
-        this.threads = Array.isArray(data.results) ? data.results : []
-        this.next = data.next
-        this.prev = data.previous
-      } catch (e) {
-        if (e.response && e.response.status === 404) {
-          this.error = '잘못된 페이지 번호입니다.'
-        } else if (e.response && e.response.status === 400) {
-          this.error = '잘못된 요청입니다.'
-        } else {
-          this.error = '목록을 불러올 수 없습니다.'
-        }
-        this.threads = []
-      } finally {
-        this.loading = false
-      }
-    },
-    async fetchPopularThreads() {
-      try {
-        const { data } = await axios.get('/api/threads/popular/')
-        this.popularThreads = Array.isArray(data) ? data : []
-        this.currentPopularIndex = 0
-      } catch {
-        this.popularThreads = []
-      }
-    },
-    async fetchFollowingThreads() {
-      try {
-        const { data } = await axios.get('/api/threads/following/?limit=5')
-        this.followingThreads = Array.isArray(data)
-          ? data.slice(0, 5)
-          : Array.isArray(data.results)
-          ? data.results.slice(0, 5)
-          : []
-      } catch {
-        this.followingThreads = []
-      }
-    },
-    goToThread(threadId) {
-      this.$router.push({ name: 'ThreadDetail', params: { id: threadId } })
-    },
-    startSlideInterval() {
-      this.clearSlideInterval()
-      this.slideInterval = setInterval(() => {
-        if (this.popularThreads.length > 0) {
-          this.currentPopularIndex =
-            (this.currentPopularIndex + 1) % this.popularThreads.length
-        }
-      }, 5000)
-    },
-    clearSlideInterval() {
-      if (this.slideInterval) clearInterval(this.slideInterval)
-    },
-    goToPage(url) {
-      this.fetchThreads(url)
-    }
-  }
+  components: { Navbar }
 }
 </script>
 
 <style scoped>
-.community-pinterest {
-  background: #faf8f6;
+.book-home {
+  background: #fff;
+  color: #181818;
   min-height: 100vh;
-  width: 100vw;
-  overflow-x: hidden;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
 }
-.main-content {
+.main-header {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2.5rem 2vw 2rem 2vw;
+  padding: 2.7rem 2vw 0.8rem 2vw;
+  text-align: center;
 }
-.page-header {
+.header-row {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
   align-items: center;
-  margin-bottom: 2rem;
+  gap: 1.2rem;
+  margin-bottom: 1.6rem;
 }
-.divider {
-  border-bottom: 1.5px solid #e0e0e0;
-  margin: 1.5rem 0 1.7rem 0;
+.search-bar {
+  flex: 1 1 350px;
+  max-width: 350px;
+  min-width: 180px;
+  padding: 0.7rem 1.3rem;
+  border: 1.5px solid #ececec;
+  border-radius: 21px;
+  font-size: 1.07rem;
+  background: #fafafa;
+  margin-right: auto;
 }
-
-/* 상단 3개 카드 */
-.top-ideas {
+.header-actions {
   display: flex;
-  gap: 1.5rem;
+  gap: 0.8rem;
+}
+.login-btn {
+  background: none;
+  border: 1.5px solid #888;
+  color: #222;
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 0.45em 1.5em;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.16s, color 0.16s;
+}
+.login-btn:hover {
+  background: #f5f5f5;
+}
+.join-btn {
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 0.45em 1.5em;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.16s;
+}
+.join-btn:hover {
+  background: #5b21b6;
+}
+.site-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 1.7rem;
+  letter-spacing: -1px;
+  line-height: 1.2;
+}
+.tab-nav {
+  display: flex;
   justify-content: center;
-  margin: 2.5rem 0 2.2rem 0;
-  flex-wrap: wrap;
-  width: 100%;
+  gap: 1.2rem;
+  margin-bottom: 2.5rem;
+  border-bottom: 1.5px solid #ececec;
+  padding-bottom: 0.7rem;
+}
+.tab-link {
+  color: #222;
+  font-size: 1.04rem;
+  font-weight: 500;
+  padding: 0.4em 1.2em;
+  border-radius: 14px 14px 0 0;
+  background: none;
+  cursor: pointer;
+  border: none;
+  transition: background 0.16s, color 0.16s;
+}
+.tab-link.active,
+.tab-link:hover {
+  background: #f5f5f5;
+  color: #7c3aed;
 }
 
-/* 커스텀 카드 스타일 (Pinterest 스타일 Masonry) */
-.custom-card {
+.main-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.1fr 1.3fr 1.1fr;
+  gap: 2.2rem;
+  margin-bottom: 2.7rem;
+}
+.main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+.section-title {
+  font-size: 1.13rem;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.main-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 1.2rem 1.2rem 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  min-height: 120px;
+}
+.card-img {
+  width: 100%;
+  max-width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 0.7rem;
+  background: #f5f5f5;
+}
+.card-episode .card-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  margin-bottom: 0.6em;
+}
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #e0e0e0;
+}
+.card-label {
+  font-size: 1.01rem;
+  color: #7c3aed;
+  font-weight: 600;
+}
+.card-caption {
+  color: #888;
+  font-size: 0.98rem;
+  margin-bottom: 0.1rem;
+  font-weight: 500;
+}
+.card-title {
+  font-size: 1.13rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+  color: #181818;
+}
+.card-desc {
+  font-size: 1.01rem;
+  color: #444;
+  margin-bottom: 0.5rem;
+}
+.card-footer {
+  font-size: 0.93rem;
+  color: #888;
+  margin-top: 0.3rem;
+}
+
+.club-section {
+  max-width: 1200px;
+  margin: 0 auto 2.7rem auto;
+  padding-top: 2.3rem;
+  border-top: 1.5px solid #ececec;
+}
+.club-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.3rem;
+  gap: 1.5rem;
+}
+.club-header h2 {
+  font-size: 1.23rem;
+  font-weight: 700;
+}
+.club-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.4rem;
+}
+.club-card {
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-  overflow: hidden;
+  padding: 1.1rem;
   display: flex;
   flex-direction: column;
-  width: 210px;
-  max-width: 100%;
-  margin-bottom: 1.5rem;
-  cursor: pointer;
-  transition: box-shadow 0.15s, transform 0.11s;
-  break-inside: avoid;
-  position: relative;
+  align-items: flex-start;
 }
-.custom-card:hover {
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  transform: translateY(-4px) scale(1.03);
+.club-card .card-img {
+  height: 100px;
+  margin-bottom: 0.6rem;
 }
-.custom-label {
-  position: absolute;
-  top: 10px;
-  left: 12px;
-  background: #e60023;
-  color: #fff;
-  font-size: 0.93rem;
-  font-weight: 600;
-  border-radius: 12px;
-  padding: 0.23em 0.9em;
-  z-index: 2;
-  opacity: 0.93;
+.club-card .card-caption {
+  color: #888;
+  font-size: 0.96rem;
+  margin-bottom: 0.1rem;
 }
-.custom-img {
-  width: 100%;
-  height: 145px;
-  max-width: 100%;
-  object-fit: cover;
-  background: #f8f8f8;
-  display: block;
+.club-card .card-title {
+  font-size: 1.07rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
 }
-.custom-title {
-  font-size: 1.01rem;
-  font-weight: 600;
-  margin: 0.7rem 0 0.15rem 0;
-  padding: 0 0.6rem;
-  text-align: left;
-}
-.custom-meta {
+.club-card .card-footer {
   font-size: 0.92rem;
   color: #888;
-  margin-bottom: 0.2rem;
-  padding: 0 0.6rem;
-  text-align: left;
+  margin-top: 0.2rem;
 }
-.custom-meta-counts {
-  font-size: 0.89rem;
-  color: #b70d1f;
-  padding: 0 0.6rem 0.7rem 0.6rem;
-  display: flex;
-  gap: 1.1em;
-}
-.custom-meta-counts .like { color: #e60023; }
-.custom-meta-counts .comment { color: #1976d2; }
 
-/* Masonry 전체 쓰레드 */
-.masonry-section {
-  width: 100%;
-  margin: 0 auto;
-  background: #faf8f6;
-  padding-bottom: 3rem;
-}
-.masonry-title {
-  font-size: 1.22rem;
-  font-weight: 700;
-  margin: 2.5rem 0 1.5rem 0.5vw;
-  text-align: left;
-  color: #222;
-}
-.masonry-grid {
+.editor-section {
   max-width: 1200px;
-  margin: 0 auto;
-  column-count: 5;
-  column-gap: 1.2rem;
-  padding: 0 1vw;
+  margin: 0 auto 2.7rem auto;
+  padding-top: 2.3rem;
+  border-top: 1.5px solid #ececec;
 }
-.masonry-grid .custom-card {
-  display: inline-block;
-  width: 210px;
-  max-width: 100%;
-  margin: 0 0 1.2rem 0;
+.editor-title {
+  font-size: 1.23rem;
+  font-weight: 700;
+  margin-bottom: 1.3rem;
+}
+.editor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.4rem;
+}
+.editor-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+}
+.editor-card .editor-rank {
+  position: absolute;
+  left: 1.1rem;
+  top: 1.1rem;
+  font-size: 2.3rem;
+  font-weight: 800;
+  color: #e5e5e5;
+  pointer-events: none;
+  z-index: 1;
+}
+.editor-card .card-img {
+  height: 100px;
+  margin-bottom: 0.6rem;
+  z-index: 2;
+  position: relative;
+}
+.editor-card .card-caption {
+  color: #888;
+  font-size: 0.96rem;
+  margin-bottom: 0.1rem;
+}
+.editor-card .card-title {
+  font-size: 1.07rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+.editor-card .card-footer {
+  font-size: 0.92rem;
+  color: #888;
+  margin-top: 0.2rem;
+}
+
+.footer-section {
+  background: #fafafa;
+  border-top: 1px solid #ececec;
+  padding: 2.2rem 0 1.7rem 0;
+  font-size: 1rem;
+  color: #888;
+  margin-top: 2rem;
+}
+.footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.5rem;
+  justify-content: center;
+  margin-top: 1.2rem;
+}
+.footer-brand {
+  min-width: 200px;
+}
+.footer-title {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: #181818;
+  margin-bottom: 0.5rem;
+}
+.footer-desc {
+  font-size: 0.98rem;
+  color: #888;
+}
+.footer-col {
+  min-width: 180px;
+}
+.footer-col h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 0.7rem;
+}
+.footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.footer-col li {
+  margin-bottom: 0.5rem;
+}
+.footer-col a {
+  color: #888;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.footer-col a:hover {
+  color: #7c3aed;
+}
+.navbar {
+  margin-bottom: 80px
 }
 
 /* 반응형 */
-@media (max-width: 1200px) {
-  .main-content, .masonry-grid { max-width: 98vw; }
-  .masonry-grid { column-count: 4; }
+@media (max-width: 1100px) {
+  .main-header, .main-grid, .club-section, .editor-section { max-width: 98vw; }
+  .main-grid { gap: 1.2rem; }
+  .club-grid, .editor-grid { gap: 1rem; }
 }
 @media (max-width: 900px) {
-  .main-content { padding: 1.2rem 0.5vw 1.2rem 0.5vw; }
-  .masonry-grid { column-count: 3; }
+  .main-grid { grid-template-columns: 1fr; }
+  .main-col { flex-direction: row; flex-wrap: wrap; gap: 1rem; }
+  .main-card, .club-card, .editor-card { width: 100%; }
+  .club-grid, .editor-grid { grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 700px) {
-  .masonry-grid { column-count: 2; }
-  .custom-card, .masonry-grid .custom-card { width: 95vw; max-width: 95vw; }
-  .custom-img { height: 38vw; min-height: 120px; max-height: 180px; }
-}
-@media (max-width: 500px) {
-  .masonry-grid { column-count: 1; }
-  .custom-card, .masonry-grid .custom-card { width: 98vw; max-width: 98vw; }
-  .custom-img { height: 46vw; min-height: 110px; max-height: 170px; }
-}
-.info-state, .error-state {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-  font-size: 1.1rem;
-}
-.error-state { color: #dc3545; }
-.pagination {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin: 2rem 0;
+@media (max-width: 600px) {
+  .main-header, .main-grid, .club-section, .editor-section { padding-left: 0.5rem; padding-right: 0.5rem; }
+  .site-title { font-size: 1.6rem; }
+  .tab-nav { flex-wrap: wrap; gap: 0.5rem; }
+  .club-grid, .editor-grid { grid-template-columns: 1fr; }
 }
 </style>

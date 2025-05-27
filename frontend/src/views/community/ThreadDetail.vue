@@ -2,129 +2,64 @@
   <div class="thread-detail-page">
     <Navbar />
     <main class="main-content" v-if="thread">
-      <div class="thread-header">
-        <h1>{{ thread.title }}</h1>
-        <div class="author-info">
-          <router-link
-            v-if="thread.user && thread.user.id"
-            :to="{ name: 'UserProfile', params: { id: thread.user.id } }"
-            class="author-link"
-          >
-            <img
-              :src="thread.user.profile_image || fallbackProfile"
-              :alt="thread.user.nickname || thread.user.username"
-              class="author-image"
-              @error="onProfileImgError"
-            />
-            <span class="author-name">{{ thread.user.nickname || thread.user.username }}</span>
-          </router-link>
-          <span class="created-at">{{ formattedDate }}</span>
-        </div>
-      </div>
-
-      <div class="book-info">
-        <div class="book-title">{{ thread.book?.title }}</div>
-        <div class="book-detail">
-          <img
-            class="book-cover"
-            :src="thread.book?.cover || fallbackBookCover"
-            :alt="thread.book?.title || '책 표지'"
-            @error="onBookImgError"
-          />
-          <div class="book-meta">
-            <div class="book-author">
-              <strong>저자:</strong> {{ thread.book?.author }}
-            </div>
-            <div class="rating">
-              <span>평점: </span>
-              <span class="stars">{{ '⭐'.repeat(Math.floor(thread.rating || 0)) }}</span>
-              <span class="rating-number">{{ thread.rating || 0 }}/5</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="thread-content">
+      <ThreadHeader
+        :thread="thread"
+        :fallback-profile="fallbackProfile"
+        :fallback-book-cover="fallbackBookCover"
+        :formatted-date="formattedDate"
+        @img-error="onProfileImgError"
+        @book-img-error="onBookImgError"
+      />
+      <ThreadActions
+        :thread="thread"
+        :is-liked="isLiked"
+        :like-loading="likeLoading"
+        :is-following="isFollowing"
+        :follow-loading="followLoading"
+        :is-mine="isMine"
+        :show-follow-button="showFollowButton"
+        @toggle-like="toggleLike"
+        @toggle-follow="toggleFollow"
+        @start-edit="startEdit"
+        @delete-thread="deleteThread"
+      />
+      <ThreadEditForm
+        v-if="editing"
+        :title="editTitle"
+        :content="editContent"
+        :loading="editLoading"
+        :error="editError"
+        @update:title="editTitle = $event"
+        @update:content="editContent = $event"
+        @submit="submitEdit"
+        @cancel="cancelEdit"
+      />
+      <div class="thread-content" v-else>
         <p>{{ thread.content }}</p>
       </div>
-
-      <div class="thread-actions">
-        <button class="like-button" @click="toggleLike" :disabled="likeLoading">
-          {{ isLiked ? '❤️' : '🤍' }} {{ thread.like_count || 0 }}명이 좋아합니다
-        </button>
-        <button
-          v-if="showFollowButton"
-          class="follow-button"
-          :class="{ following: isFollowing }"
-          @click="toggleFollow"
-          :disabled="followLoading"
-        >
-          {{ isFollowing ? '언팔로우' : '팔로우' }}
-        </button>
-        <button v-if="isMine" @click="startEdit" class="edit-button">수정</button>
-        <button v-if="isMine" @click="deleteThread" class="delete-button">삭제</button>
-      </div>
-
-      <!-- 수정 폼 -->
-      <div v-if="editing" class="edit-form">
-        <input v-model="editTitle" placeholder="제목 수정" />
-        <textarea v-model="editContent" rows="10" placeholder="내용 수정"></textarea>
-        <div class="edit-actions">
-          <button @click="submitEdit" class="submit-btn" :disabled="editLoading">저장</button>
-          <button @click="cancelEdit" class="cancel-btn">취소</button>
-        </div>
-        <div v-if="editError" class="error-state">{{ editError }}</div>
-      </div>
-
-      <div class="comments-section">
-        <h2>댓글 ({{ thread.comments?.length || 0 }})</h2>
-        <div class="comment-form">
-          <textarea v-model="newComment" placeholder="댓글을 작성하세요"></textarea>
-          <button @click="addComment" :disabled="!newComment.trim() || commentLoading">등록</button>
-        </div>
-        <div class="comments-list">
-          <div
-            v-for="comment in thread.comments || []"
-            :key="comment.id"
-            class="comment"
-            @click="openCommentDetail(comment.id)"
-            style="cursor:pointer"
-          >
-            <div class="comment-header">
-              <span class="comment-author">{{ comment.user?.nickname || comment.user?.username }}</span>
-              <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
-              <template v-if="userId && String(userId) === String(comment.user?.id)">
-                <button class="comment-edit-btn" @click.stop="startEditComment(comment)">수정</button>
-                <button class="comment-delete-btn" @click.stop="deleteComment(comment)">삭제</button>
-              </template>
-            </div>
-            <div v-if="isEditingComment(comment.id)" class="comment-edit-form">
-              <textarea v-model="editCommentContent"></textarea>
-              <div class="edit-actions">
-                <button @click="submitEditComment(comment)" :disabled="editCommentLoading">저장</button>
-                <button @click="cancelEditComment" :disabled="editCommentLoading">취소</button>
-              </div>
-              <div v-if="editCommentError" class="error-state">{{ editCommentError }}</div>
-            </div>
-            <p class="comment-content" v-else>{{ comment.content }}</p>
-          </div>
-        </div>
-        <!-- 단일 댓글 상세 모달 -->
-        <div v-if="showCommentDetail" class="modal-bg" @click.self="showCommentDetail = false">
-          <div class="modal-content">
-            <button class="close-btn" @click="showCommentDetail = false">닫기</button>
-            <div v-if="commentDetailLoading" class="loading-state">불러오는 중...</div>
-            <div v-else-if="commentDetailError" class="error-state">{{ commentDetailError }}</div>
-            <div v-else-if="selectedCommentDetail" class="comment-detail">
-              <div class="comment-header">
-                <span class="comment-author">{{ selectedCommentDetail.user?.nickname || selectedCommentDetail.user?.username }}</span>
-                <span class="comment-date">{{ formatDate(selectedCommentDetail.created_at) }}</span>
-              </div>
-              <p class="comment-content">{{ selectedCommentDetail.content }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <CommentSection
+        :comments="thread.comments"
+        :user-id="userId"
+        :thread-id="thread.id"
+        @add-comment="addComment"
+        @edit-comment="submitEditComment"
+        @delete-comment="deleteComment"
+        @open-detail="openCommentDetail"
+        :comment-loading="commentLoading"
+        :edit-comment-loading="editCommentLoading"
+        :edit-comment-error="editCommentError"
+        :editing-comment-id="editingCommentId"
+        :edit-comment-content="editCommentContent"
+        @start-edit-comment="startEditComment"
+        @cancel-edit-comment="cancelEditComment"
+        :show-comment-detail="showCommentDetail"
+        :selected-comment-detail="selectedCommentDetail"
+        :comment-detail-loading="commentDetailLoading"
+        :comment-detail-error="commentDetailError"
+        @close-detail="showCommentDetail = false"
+        :new-comment="newComment"
+        @update:new-comment="newComment = $event"
+      />
       <div v-if="error" class="error-state">{{ error }}</div>
     </main>
     <ErrorPage v-else type="loading" message="쓰레드를 불러오는 중입니다." />
@@ -137,11 +72,23 @@ import axios from 'axios'
 import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
 import ErrorPage from '@/components/common/ErrorPage.vue'
+import ThreadHeader from '@/components/thread/ThreadHeader.vue'
+import ThreadActions from '@/components/thread/ThreadActions.vue'
+import ThreadEditForm from '@/components/thread/ThreadEditForm.vue'
+import CommentSection from '@/components/comment/CommentSection.vue'
 import { useAuthStore } from '@/stores/auth'
 
 export default {
-  name: 'ThreadDetail',
-  components: { Navbar, Footer, ErrorPage },
+  name: 'ThreadDetailPage',
+  components: {
+    Navbar,
+    Footer,
+    ErrorPage,
+    ThreadHeader,
+    ThreadActions,
+    ThreadEditForm,
+    CommentSection
+  },
   props: {
     id: {
       type: [Number, String],
@@ -150,36 +97,32 @@ export default {
   },
   data() {
     return {
-      thread: {
-        book: {},
-        user: {},
-        comments: []
-      },
+      thread: null, // 반드시 선언!
       fallbackBookCover: 'https://cdn-icons-png.flaticon.com/512/29/29302.png',
       fallbackProfile: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-      newComment: '',
       isLiked: false,
       likeLoading: false,
-      commentLoading: false,
-      error: null,
-      userId: null,
+      isFollowing: false,
+      followLoading: false,
       editing: false,
       editTitle: '',
       editContent: '',
       editLoading: false,
       editError: null,
-      isFollowing: false,
-      followLoading: false,
-      // 댓글 상세/수정/삭제 관련
-      showCommentDetail: false,
-      selectedCommentDetail: null,
-      commentDetailLoading: false,
-      commentDetailError: null,
+      error: null,
+      userId: null,
+      showFollowButton: false,
+      // 댓글 관련
+      newComment: '',
+      commentLoading: false,
       editingCommentId: null,
       editCommentContent: '',
       editCommentLoading: false,
       editCommentError: null,
-      deleteLoadingId: null
+      showCommentDetail: false,
+      selectedCommentDetail: null,
+      commentDetailLoading: false,
+      commentDetailError: null,
     }
   },
   computed: {
@@ -200,7 +143,7 @@ export default {
         String(this.userId) === String(this.thread.user.id || this.thread.user.pk)
       )
     },
-    showFollowButton() {
+    showFollowButtonComputed() {
       return (
         this.thread &&
         this.thread.user &&
@@ -209,45 +152,11 @@ export default {
       )
     }
   },
-  async submitEditComment(comment) {
-  if (!this.editCommentContent.trim()) {
-    this.editCommentError = '댓글 내용을 입력하세요.'
-    return
-  }
-  this.editCommentLoading = true
-  this.editCommentError = null
-  try {
-    const token = localStorage.getItem('access_token')
-    const response = await axios.put(
-      `/api/threads/comments/${comment.id}/`,
-      { content: this.editCommentContent },
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-    const idx = this.thread.comments.findIndex(c => c.id === comment.id)
-    if (idx !== -1) {
-      this.$set(this.thread.comments, idx, {
-        ...this.thread.comments[idx],
-        ...response.data
-      })
-    }
-    this.cancelEditComment()
-  } catch (err) {
-    console.error('댓글 수정 에러:', err, err.response)
-    if (err.response) {
-      alert(
-        '댓글 수정 실패: ' +
-        (err.response.data?.detail || JSON.stringify(err.response.data) || err.message)
-      );
-    }
-    this.editCommentError = '댓글 수정에 실패했습니다.'
-  } finally {
-    this.editCommentLoading = false
-  }
-},
   methods: {
     async fetchThread() {
       try {
         const response = await axios.get(`/api/threads/${this.id}/`)
+        // 명세에 따라 모든 필드 그대로 할당
         this.thread = {
           ...response.data,
           book: response.data.book || {},
@@ -256,8 +165,10 @@ export default {
         }
         this.isLiked = response.data.is_liked || false
         this.isFollowing = response.data.is_followed || false
+        this.showFollowButton = this.showFollowButtonComputed
       } catch (err) {
-        this.$router.push('/not-found')
+        this.error = '쓰레드를 불러오는데 실패했습니다.'
+        this.thread = null
       }
     },
     onBookImgError(e) {
@@ -290,126 +201,6 @@ export default {
         this.isFollowing = response.data.is_following
       } finally {
         this.followLoading = false
-      }
-    },
-    // 1️⃣ 댓글 생성
-    async addComment() {
-      if (!this.newComment.trim() || !this.thread) return
-      this.commentLoading = true
-      try {
-        const token = localStorage.getItem('access_token')
-        const response = await axios.post(
-          `/api/threads/${this.thread.id}/comments/create/`,
-          { content: this.newComment },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        this.thread.comments.push(response.data)
-        this.newComment = ''
-      } catch (err) {
-        alert('댓글 등록에 실패했습니다.')
-      } finally {
-        this.commentLoading = false
-      }
-    },
-    // 2️⃣ 댓글 상세 조회 (모달)
-    async openCommentDetail(commentId) {
-      this.showCommentDetail = true
-      this.selectedCommentDetail = null
-      this.commentDetailLoading = true
-      this.commentDetailError = null
-      try {
-        const token = localStorage.getItem('access_token')
-        const { data } = await axios.get(
-          `/api/threads/comments/${commentId}/`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        this.selectedCommentDetail = data
-      } catch (err) {
-        this.commentDetailError = '댓글 정보를 불러올 수 없습니다.'
-      } finally {
-        this.commentDetailLoading = false
-      }
-    },
-    // 댓글 수정 진입
-    startEditComment(comment) {
-      this.editingCommentId = comment.id
-      this.editCommentContent = comment.content
-      this.editCommentError = null
-    },
-    isEditingComment(commentId) {
-      return this.editingCommentId === commentId
-    },
-    cancelEditComment() {
-      this.editingCommentId = null
-      this.editCommentContent = ''
-      this.editCommentError = null
-    },
-    // 3️⃣ 댓글 수정
-    async submitEditComment(comment) {
-      if (!this.editCommentContent.trim()) {
-        this.editCommentError = '댓글 내용을 입력하세요.'
-        return
-      }
-      this.editCommentLoading = true
-      this.editCommentError = null
-      try {
-        const token = localStorage.getItem('access_token')
-        const response = await axios.put(
-          `/api/threads/comments/${comment.id}/`,
-          { content: this.editCommentContent },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        const idx = this.thread.comments.findIndex(c => c.id === comment.id)
-        if (idx !== -1) {
-          this.$set(this.thread.comments, idx, {
-            ...this.thread.comments[idx],
-            ...response.data
-          })
-        }
-        this.cancelEditComment()
-      } catch (err) {
-        this.editCommentError = '댓글 수정에 실패했습니다.'
-      } finally {
-        this.editCommentLoading = false
-      }
-    },
-    // 4️⃣ 댓글 삭제
-    async deleteComment(comment) {
-      if (!confirm('정말 삭제하시겠습니까?')) return
-      this.deleteLoadingId = comment.id
-      try {
-        const token = localStorage.getItem('access_token')
-        await axios.delete(
-          `/api/threads/comments/${comment.id}/`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        this.thread.comments = this.thread.comments.filter(c => c.id !== comment.id)
-      } catch (err) {
-        alert('댓글 삭제에 실패했습니다.')
-      } finally {
-        this.deleteLoadingId = null
-      }
-    },
-    catch (err) {
-  console.error('댓글 수정 에러:', err, err.response)
-  if (err.response) {
-    alert(
-      '댓글 수정 실패: ' +
-      (err.response.data?.detail || JSON.stringify(err.response.data) || err.message)
-    );
-  }
-  this.editCommentError = '댓글 수정에 실패했습니다.'
-},
-    async deleteThread() {
-      if (!confirm('정말 삭제하시겠습니까?')) return
-      try {
-        const token = localStorage.getItem('access_token')
-        await axios.delete(`/api/threads/${this.thread.id}/update-delete/`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        this.$router.push('/community')
-      } catch (err) {
-        this.error = '삭제에 실패했습니다.'
       }
     },
     startEdit() {
@@ -456,14 +247,114 @@ export default {
         this.editLoading = false
       }
     },
-    formatDate(dateStr) {
-      if (!dateStr) return ''
-      const date = new Date(dateStr)
-      return new Intl.DateTimeFormat('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }).format(date)
+    async deleteThread() {
+      if (!confirm('정말 삭제하시겠습니까?')) return
+      try {
+        const token = localStorage.getItem('access_token')
+        await axios.delete(`/api/threads/${this.thread.id}/update-delete/`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        this.$router.push('/community')
+      } catch (err) {
+        this.error = '삭제에 실패했습니다.'
+      }
+    },
+    // 댓글 관련 메서드 (paste.txt와 동일하게 유지, catch 블록 등도 포함)
+    async addComment(content) {
+      if (!content.trim() || !this.thread) return
+      this.commentLoading = true
+      try {
+        const token = localStorage.getItem('access_token')
+        const response = await axios.post(
+          `/api/threads/${this.thread.id}/comments/create/`,
+          { content },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        this.thread.comments.push(response.data)
+        this.newComment = ''
+      } catch (err) {
+        alert('댓글 등록에 실패했습니다.')
+      } finally {
+        this.commentLoading = false
+      }
+    },
+    startEditComment(comment) {
+      this.editingCommentId = comment.id
+      this.editCommentContent = comment.content
+      this.editCommentError = null
+    },
+    cancelEditComment() {
+      this.editingCommentId = null
+      this.editCommentContent = ''
+      this.editCommentError = null
+    },
+    async submitEditComment({ comment, content }) {
+      if (!content.trim()) {
+        this.editCommentError = '댓글 내용을 입력하세요.'
+        return
+      }
+      this.editCommentLoading = true
+      this.editCommentError = null
+      try {
+        const token = localStorage.getItem('access_token')
+        const response = await axios.put(
+          `/api/threads/comments/${comment.id}/`,
+          { content },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        const idx = this.thread.comments.findIndex(c => c.id === comment.id)
+        if (idx !== -1) {
+          this.$set(this.thread.comments, idx, {
+            ...this.thread.comments[idx],
+            ...response.data
+          })
+        }
+        this.cancelEditComment()
+      } catch (err) {
+        console.error('댓글 수정 에러:', err, err.response)
+        if (err && err.response) {
+          alert(
+            '댓글 수정 실패: ' +
+            (err.response.data?.detail || JSON.stringify(err.response.data) || err.message)
+          );
+        } else {
+          alert('댓글 수정 실패: 네트워크/알 수 없는 오류');
+        }
+        this.editCommentError = '댓글 수정에 실패했습니다.'
+      } finally {
+        this.editCommentLoading = false
+      }
+    },
+    async deleteComment(comment) {
+      if (!confirm('정말 삭제하시겠습니까?')) return
+      try {
+        const token = localStorage.getItem('access_token')
+        await axios.delete(
+          `/api/threads/comments/${comment.id}/`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        this.thread.comments = this.thread.comments.filter(c => c.id !== comment.id)
+      } catch (err) {
+        alert('댓글 삭제에 실패했습니다.')
+      }
+    },
+    async openCommentDetail(commentId) {
+      this.showCommentDetail = true
+      this.selectedCommentDetail = null
+      this.commentDetailLoading = true
+      this.commentDetailError = null
+      try {
+        const token = localStorage.getItem('access_token')
+        const { data } = await axios.get(
+          `/api/threads/comments/${commentId}/`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        this.selectedCommentDetail = data
+      } catch (err) {
+        this.commentDetailError = '댓글 정보를 불러올 수 없습니다.'
+      } finally {
+        this.commentDetailLoading = false
+      }
     }
   },
   async created() {
