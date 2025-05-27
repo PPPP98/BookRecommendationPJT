@@ -1,0 +1,561 @@
+[
+{
+    "model": "threads.thread",
+    "pk": 1,
+    "fields": {
+        "title": "『여행의 이유』",
+        "content": "여행 에세이를 읽으며, 낯선 곳에서 느끼는 설렘과 성장의 순간을 다시 떠올릴 수 있었습니다. 일상에 지쳤을 때 이 책을 펼치면 새로운 에너지를 얻는 기분이에요.",
+        "created_at": "2025-05-27T20:17:12.684Z",
+        "updated_at": "2025-05-27T20:17:12.684Z",
+        "rating": 5,
+        "user": 1,
+        "book": 302
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 2,
+    "fields": {
+        "title": "재밌다",
+        "content": "수많은 선택지 속에서 내가 걸어온 길을 돌아보게 해주는 책이었습니다. 후회보다는 현재를 소중히 여겨야겠다는 생각이 들었어요.",
+        "created_at": "2025-05-27T20:18:00.957Z",
+        "updated_at": "2025-05-27T20:18:00.957Z",
+        "rating": 4,
+        "user": 1,
+        "book": 436
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 3,
+    "fields": {
+        "title": "트렌드 코리아",
+        "content": "빠르게 변하는 세상에서 어떤 흐름을 주목해야 할지 알 수 있었습니다. 요즘 사회의 변화가 궁금하다면 꼭 읽어볼 만한 책입니다.",
+        "created_at": "2025-05-27T20:18:42.703Z",
+        "updated_at": "2025-05-27T20:18:42.703Z",
+        "rating": 5,
+        "user": 1,
+        "book": 292
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 4,
+    "fields": {
+        "title": "셜록 홈즈",
+        "content": "추리소설의 고전답게 흥미진진한 전개와 셜록 홈즈의 명쾌한 추리가 인상적이었습니다. 커피 한 잔과 함께 읽기 딱 좋은 책이에요.",
+        "created_at": "2025-05-27T20:21:28.001Z",
+        "updated_at": "2025-05-27T20:21:28.001Z",
+        "rating": 5,
+        "user": 2,
+        "book": 905
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 5,
+    "fields": {
+        "title": "슬픔",
+        "content": "현실적인 여성의 삶을 담담하게 그려낸 점이 마음에 남았습니다. 사회문제에 대해 다시 한 번 생각해보는 계기가 되었어요.",
+        "created_at": "2025-05-27T20:22:54.959Z",
+        "updated_at": "2025-05-27T20:22:54.959Z",
+        "rating": 4,
+        "user": 2,
+        "book": 151
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 6,
+    "fields": {
+        "title": "판타지",
+        "content": "어른이 되어가는 과정에서 잊고 있던 시간의 소중함을 다시 일깨워줬습니다. 판타지와 현실의 경계에서 많은 생각을 하게 됐어요.",
+        "created_at": "2025-05-27T20:29:26.567Z",
+        "updated_at": "2025-05-27T20:29:26.567Z",
+        "rating": 5,
+        "user": 2,
+        "book": 354
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 7,
+    "fields": {
+        "title": "좋습니다",
+        "content": "새로운 시각이네요",
+        "created_at": "2025-05-27T20:31:23.353Z",
+        "updated_at": "2025-05-27T20:31:23.354Z",
+        "rating": 4,
+        "user": 2,
+        "book": 499
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 8,
+    "fields": {
+        "title": "내 죽음에 네가 들어왔다",
+        "content": "죽음이라는 무거운 주제를 통해 오히려 삶을 더 깊이 이해하게 됐습니다. 읽고 나서 한동안 여운이 남아 생각이 많아졌어요.",
+        "created_at": "2025-05-27T20:32:10.010Z",
+        "updated_at": "2025-05-27T20:32:10.010Z",
+        "rating": 5,
+        "user": 3,
+        "book": 367
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 9,
+    "fields": {
+        "title": "지적 대화",
+        "content": "다양한 분야의 지식을 쉽고 재미있게 풀어내서, 지적 호기심을 자극하는 책이었습니다. 친구들과 대화할 때 도움이 많이 됐어요",
+        "created_at": "2025-05-27T20:32:54.740Z",
+        "updated_at": "2025-05-27T20:32:54.741Z",
+        "rating": 4,
+        "user": 3,
+        "book": 52
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 10,
+    "fields": {
+        "title": "생기부 필독서",
+        "content": "청소년의 시선에서 바라본 사회의 문제를 섬세하게 그려냈습니다. 감정이입이 잘 되어 몰입해서 읽었습니다.",
+        "created_at": "2025-05-27T20:33:16.315Z",
+        "updated_at": "2025-05-27T20:33:16.315Z",
+        "rating": 5,
+        "user": 3,
+        "book": 831
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 11,
+    "fields": {
+        "title": "ㄷㄷㄷ헬이다",
+        "content": "헬조선",
+        "created_at": "2025-05-27T20:33:39.122Z",
+        "updated_at": "2025-05-27T20:33:39.122Z",
+        "rating": 4,
+        "user": 3,
+        "book": 443
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 12,
+    "fields": {
+        "title": "만일 내가 인생을 다시 산다면",
+        "content": "엄마로서, 그리고 한 사람으로서 자존감을 지키는 것이 얼마나 중요한지 다시 한 번 느꼈습니다. 위로와 힘을 얻을 수 있었어요.",
+        "created_at": "2025-05-27T20:35:12.313Z",
+        "updated_at": "2025-05-27T20:35:12.313Z",
+        "rating": 5,
+        "user": 4,
+        "book": 480
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 13,
+    "fields": {
+        "title": "친절",
+        "content": "작은 친절이 큰 변화를 만든다는 메시지가 감동적이었습니다. 마음이 따뜻해지는 책이에요.",
+        "created_at": "2025-05-27T20:35:29.458Z",
+        "updated_at": "2025-05-27T20:35:29.458Z",
+        "rating": 5,
+        "user": 4,
+        "book": 331
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 14,
+    "fields": {
+        "title": "『아몬드』 독후감",
+        "content": "감정을 잘 표현하지 못하는 주인공의 이야기가 인상 깊었습니다. 가족의 사랑을 다시 생각하게 됐어요.",
+        "created_at": "2025-05-27T20:36:26.832Z",
+        "updated_at": "2025-05-27T20:36:26.832Z",
+        "rating": 5,
+        "user": 4,
+        "book": 201
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 15,
+    "fields": {
+        "title": "IT 업계에서 일하는 개발자",
+        "content": "좋은 코드란 무엇인지, 개발자로서 갖춰야 할 태도를 다시 한 번 배우게 됐습니다. 실무에 바로 적용할 수 있는 내용이 많아요.",
+        "created_at": "2025-05-27T20:38:10.975Z",
+        "updated_at": "2025-05-27T20:38:10.975Z",
+        "rating": 5,
+        "user": 5,
+        "book": 182
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 16,
+    "fields": {
+        "title": "이코노미스트",
+        "content": "경제에 대해 어렵지 않게 설명해줘서, 실생활에도 도움이 많이 됐습니다. 경제에 관심 있는 분들에게 추천하고 싶어요.",
+        "created_at": "2025-05-27T20:38:28.727Z",
+        "updated_at": "2025-05-27T20:38:28.727Z",
+        "rating": 4,
+        "user": 5,
+        "book": 817
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 17,
+    "fields": {
+        "title": "프로그래밍",
+        "content": "데이터가 어떻게 세상을 바꾸는지 알기 쉽게 설명해줘서 유익했습니다. IT업계 종사자라면 꼭 읽어보길 추천합니다.",
+        "created_at": "2025-05-27T20:39:23.129Z",
+        "updated_at": "2025-05-27T20:39:23.129Z",
+        "rating": 5,
+        "user": 5,
+        "book": 395
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 18,
+    "fields": {
+        "title": "동물농장",
+        "content": "동물들의 이야기를 통해 사회의 부조리를 비판하는 내용이 신선했습니다. 읽고 나서 여러 가지 생각이 들었어요.",
+        "created_at": "2025-05-27T20:40:48.801Z",
+        "updated_at": "2025-05-27T20:40:48.801Z",
+        "rating": 5,
+        "user": 4,
+        "book": 166
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 19,
+    "fields": {
+        "title": "동물농장",
+        "content": "동물들의 이야기를 통해 사회의 부조리를 비판하는 내용이 신선했습니다. 읽고 나서 여러 가지 생각이 들었어요.",
+        "created_at": "2025-05-27T20:41:18.842Z",
+        "updated_at": "2025-05-27T20:41:18.842Z",
+        "rating": 5,
+        "user": 6,
+        "book": 69
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 20,
+    "fields": {
+        "title": "야생동물",
+        "content": "자연과 인간의 관계에 대해 다시 생각하게 해준 책입니다. 환경 보호의 중요성을 느꼈어요.",
+        "created_at": "2025-05-27T20:41:53.524Z",
+        "updated_at": "2025-05-27T20:41:53.524Z",
+        "rating": 4,
+        "user": 6,
+        "book": 694
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 21,
+    "fields": {
+        "title": "해리포터",
+        "content": "마법 세계의 모험이 정말 재미있었습니다. 친구들과 함께 읽으며 상상력을 키울 수 있었어요.",
+        "created_at": "2025-05-27T20:42:26.406Z",
+        "updated_at": "2025-05-27T20:42:26.406Z",
+        "rating": 5,
+        "user": 6,
+        "book": 345
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 22,
+    "fields": {
+        "title": "불량한 자전거",
+        "content": "걷기의 매력을 잘 담아낸 책이었습니다. 일상에서 소소한 행복을 찾는 법을 배웠어요.",
+        "created_at": "2025-05-27T20:44:00.791Z",
+        "updated_at": "2025-05-27T20:44:00.791Z",
+        "rating": 4,
+        "user": 7,
+        "book": 775
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 23,
+    "fields": {
+        "title": "살기",
+        "content": "사진과 함께 여행 이야기가 펼쳐져서 읽는 내내 즐거웠습니다. 나도 언젠가 저런 여행을 해보고 싶어요.",
+        "created_at": "2025-05-27T20:45:04.423Z",
+        "updated_at": "2025-05-27T20:45:04.423Z",
+        "rating": 5,
+        "user": 7,
+        "book": 937
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 24,
+    "fields": {
+        "title": "마음 공부",
+        "content": "마음을 편안하게 해주는 글이 많아 좋았습니다. 바쁜 일상 속에서 잠시 쉬어갈 수 있었어요.",
+        "created_at": "2025-05-27T20:46:09.326Z",
+        "updated_at": "2025-05-27T20:46:09.327Z",
+        "rating": 5,
+        "user": 8,
+        "book": 218
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 25,
+    "fields": {
+        "title": "작별인사",
+        "content": "자기 자신을 사랑하는 법을 배울 수 있었습니다. 용기를 주는 책이었어요.",
+        "created_at": "2025-05-27T20:46:41.887Z",
+        "updated_at": "2025-05-27T20:46:41.887Z",
+        "rating": 5,
+        "user": 8,
+        "book": 763
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 26,
+    "fields": {
+        "title": "심리",
+        "content": "일상에서 활용할 수 있는 심리학 지식이 많아 유익했습니다. 인간관계에 도움이 됐어요.",
+        "created_at": "2025-05-27T20:47:41.809Z",
+        "updated_at": "2025-05-27T20:47:41.809Z",
+        "rating": 4,
+        "user": 8,
+        "book": 269
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 27,
+    "fields": {
+        "title": "한국을 빛낸",
+        "content": "재미있게 한자도 배우고, 모험 이야기도 즐길 수 있어서 좋았습니다",
+        "created_at": "2025-05-27T20:49:27.704Z",
+        "updated_at": "2025-05-27T20:49:27.704Z",
+        "rating": 5,
+        "user": 4,
+        "book": 598
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 28,
+    "fields": {
+        "title": "도움이됩니다",
+        "content": "만화로 보는 3분 철학 3 : 서양 현대 철학편",
+        "created_at": "2025-05-27T20:50:00.774Z",
+        "updated_at": "2025-05-27T20:50:00.775Z",
+        "rating": 4,
+        "user": 9,
+        "book": 38
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 29,
+    "fields": {
+        "title": "ㅋㅋㅋ",
+        "content": "상상력 넘치는 이야기와 귀여운 그림이 마음에 들었어요. 친구들에게도 추천하고 싶어요.",
+        "created_at": "2025-05-27T20:51:04.059Z",
+        "updated_at": "2025-05-27T20:51:04.059Z",
+        "rating": 4,
+        "user": 9,
+        "book": 601
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 30,
+    "fields": {
+        "title": "시간을 파는 상점",
+        "content": "시간의 소중함을 깨닫게 해준 책이었습니다. 감동적인 결말이 인상 깊었어요.",
+        "created_at": "2025-05-27T20:51:28.535Z",
+        "updated_at": "2025-05-27T20:51:28.535Z",
+        "rating": 4,
+        "user": 9,
+        "book": 860
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 31,
+    "fields": {
+        "title": "1) 『나는 매일 걷기로 했다』 독후감",
+        "content": "걷기의 중요성과 실천 방법을 알기 쉽게 설명해줘서 실생활에 바로 적용할 수 있었습니다.",
+        "created_at": "2025-05-27T20:52:42.540Z",
+        "updated_at": "2025-05-27T20:52:42.540Z",
+        "rating": 5,
+        "user": 10,
+        "book": 172
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 32,
+    "fields": {
+        "title": "뇌과학",
+        "content": "건강하게 오래 사는 방법에 대한 다양한 팁을 얻을 수 있어서 유익했습니다.",
+        "created_at": "2025-05-27T20:53:32.538Z",
+        "updated_at": "2025-05-27T20:53:32.538Z",
+        "rating": 5,
+        "user": 10,
+        "book": 393
+    }
+},
+{
+    "model": "threads.thread",
+    "pk": 33,
+    "fields": {
+        "title": "삼국지",
+        "content": "역사 속 인물들의 리더십과 지혜를 배울 수 있어 흥미로웠습니다. 오랜만에 몰입해서 읽은 책이에요.",
+        "created_at": "2025-05-27T20:53:55.452Z",
+        "updated_at": "2025-05-27T20:53:55.452Z",
+        "rating": 5,
+        "user": 10,
+        "book": 27
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 1,
+    "fields": {
+        "content": "좋은 글",
+        "created_at": "2025-05-27T20:21:45.588Z",
+        "user": 2,
+        "thread": 3
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 2,
+    "fields": {
+        "content": "인정",
+        "created_at": "2025-05-27T20:21:53.730Z",
+        "user": 2,
+        "thread": 2
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 3,
+    "fields": {
+        "content": "여행 좋지",
+        "created_at": "2025-05-27T20:22:02.781Z",
+        "user": 2,
+        "thread": 1
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 4,
+    "fields": {
+        "content": "자추",
+        "created_at": "2025-05-27T20:23:08.587Z",
+        "user": 2,
+        "thread": 4
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 5,
+    "fields": {
+        "content": "ㄷㄷㄷ",
+        "created_at": "2025-05-27T20:29:39.167Z",
+        "user": 2,
+        "thread": 2
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 6,
+    "fields": {
+        "content": "띵작",
+        "created_at": "2025-05-27T20:29:51.954Z",
+        "user": 2,
+        "thread": 4
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 7,
+    "fields": {
+        "content": "여행",
+        "created_at": "2025-05-27T20:32:16.016Z",
+        "user": 3,
+        "thread": 1
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 8,
+    "fields": {
+        "content": "판타지네요",
+        "created_at": "2025-05-27T20:32:24.107Z",
+        "user": 3,
+        "thread": 6
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 9,
+    "fields": {
+        "content": "가고싶다",
+        "created_at": "2025-05-27T20:35:42.936Z",
+        "user": 4,
+        "thread": 1
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 10,
+    "fields": {
+        "content": "힐링",
+        "created_at": "2025-05-27T20:35:57.268Z",
+        "user": 4,
+        "thread": 6
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 11,
+    "fields": {
+        "content": "도움이됩니다",
+        "created_at": "2025-05-27T20:36:33.612Z",
+        "user": 4,
+        "thread": 10
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 12,
+    "fields": {
+        "content": "재밌어요",
+        "created_at": "2025-05-27T20:41:28.225Z",
+        "user": 6,
+        "thread": 18
+    }
+},
+{
+    "model": "threads.comment",
+    "pk": 13,
+    "fields": {
+        "content": "자전거 여행",
+        "created_at": "2025-05-27T20:44:34.466Z",
+        "user": 7,
+        "thread": 1
+    }
+}
+]
