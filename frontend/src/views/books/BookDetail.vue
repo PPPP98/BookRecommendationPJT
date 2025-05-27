@@ -183,7 +183,9 @@ export default {
       this.$router.push({ name: 'ThreadWrite', params: { bookId: this.book.id } })
     },
     navigateToBook(bookId) {
-      this.$router.push({ name: 'BookDetail', params: { id: bookId } })
+      // 스크롤을 맨 위로 이동하고 새 도서 데이터 로드
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      this.$router.push(`/books/${bookId}/`)
     },
     onImgError(e) {
       e.target.src = 'https://cdn-icons-png.flaticon.com/512/29/29302.png'
@@ -210,6 +212,9 @@ export default {
   watch: {
     'book.description': function () {
       this.$nextTick(this.checkDescLong)
+    },
+    '$route.params.id': function(newId) {
+      this.fetchBook()
     }
   },
   mounted() {
