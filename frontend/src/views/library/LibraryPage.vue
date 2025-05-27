@@ -20,7 +20,6 @@
 -->
 <template>
   <div class="library-page">
-    <Navbar />
     
     <main class="main-content">
       <h1>주변 도서관</h1>
@@ -37,14 +36,12 @@
 
 <script>
 import { libraries } from '@/mocks/libraries'
-import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
 import LibraryMap from '@/components/library/LibraryMap.vue'
 
 export default {
   name: 'LibraryPage',
   components: {
-    Navbar,
     Footer,
     LibraryMap
   },

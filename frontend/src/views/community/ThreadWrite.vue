@@ -1,6 +1,5 @@
 <template>
   <div class="thread-write-page">
-    <Navbar />
     <main class="main-content">
       <h1>새 커뮤니티 글 작성</h1>
 
@@ -70,7 +69,6 @@
 <script>
 import axios from 'axios'
 import Footer from '@/components/common/Footer.vue'
-import Navbar from '@/components/common/Navbar.vue'
 
 export default {
   name: 'ThreadWrite',

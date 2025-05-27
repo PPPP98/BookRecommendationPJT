@@ -1,6 +1,5 @@
 <template>
   <div class="thread-detail-page">
-    <Navbar />
     <main class="main-content" v-if="thread">
       <ThreadHeader
         :thread="thread"
@@ -69,7 +68,6 @@
 
 <script>
 import axios from 'axios'
-import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
 import ErrorPage from '@/components/common/ErrorPage.vue'
 import ThreadHeader from '@/components/thread/ThreadHeader.vue'
@@ -81,7 +79,6 @@ import { useAuthStore } from '@/stores/auth'
 export default {
   name: 'ThreadDetailPage',
   components: {
-    Navbar,
     Footer,
     ErrorPage,
     ThreadHeader,

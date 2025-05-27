@@ -1,6 +1,5 @@
 <template>
   <div class="thread-edit-page">
-    <Navbar />
     <main class="main-content" v-if="thread">
       <h1>글 수정</h1>
       <div class="selected-book" v-if="thread.book">
@@ -59,7 +58,6 @@
 <script>
 import axios from 'axios'
 import Footer from '@/components/common/Footer.vue'
-import Navbar from '@/components/common/Navbar.vue'
 import ErrorPage from '@/components/common/ErrorPage.vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -73,7 +71,6 @@ export default {
   },
   components: {
     Footer,
-    Navbar,
     ErrorPage
   },
   data() {

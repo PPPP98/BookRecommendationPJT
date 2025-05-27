@@ -1,7 +1,5 @@
 <template>
   <div class="book-detail-page">
-    <Navbar />
-
     <main class="main-content" v-if="book">
       <div class="book-header">
         <img :src="book.cover" :alt="book.title" class="book-cover" />
@@ -59,6 +57,9 @@
         <ul>
           <li v-for="thread in book.threads" :key="thread.id">
             <router-link :to="`/threads/${thread.id}`">{{ thread.title }}</router-link>
+            <span class="thread-author">({{ thread.comment_count }})</span>
+            <span class="thread-author">추천수: {{ thread.like_count }}</span>
+            <span class="thread-author">작성자: {{ thread.user.nickname }}</span>
           </li>
         </ul>
       </div>
@@ -96,14 +97,12 @@
 
 <script>
 import axios from 'axios'
-import Navbar from '@/components/common/Navbar.vue'
 import Footer from '@/components/common/Footer.vue'
 import ErrorPage from '@/components/common/ErrorPage.vue'
 
 export default {
   name: 'BookDetail',
   components: {
-    Navbar,
     Footer,
     ErrorPage
   },
